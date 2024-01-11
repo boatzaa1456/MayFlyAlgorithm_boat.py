@@ -5,7 +5,7 @@ def calculate_completion_time(df_order, time):
     max_process_time = df_order['process_time'].max()
     completion_time_batch = max_process_time + time
 
-
+    #
     return completion_time_batch
 
 def calculate_tardiness_order(df_order, order_no):

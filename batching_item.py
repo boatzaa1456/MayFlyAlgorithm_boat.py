@@ -3,7 +3,7 @@ import time
 
 value_item_heavy = 100
 
-
+#
 def batching_A(df_item_poor, list_index_item, *info):
 
     # จับเวลาการทำงานของกระบวนการ

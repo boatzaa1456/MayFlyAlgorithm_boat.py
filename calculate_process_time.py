@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 import math
-
+#
 def calculate_completion_time(list_distance_batch, number_item_each_batch, *info):
 
     ''' คำนวณเวลาเสร็จสิ้น 
