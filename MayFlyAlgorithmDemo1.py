@@ -296,7 +296,7 @@ print(f'arc_sol_male_mayfly_velocity_dict = {arc_sol_male_mayfly_velocity_dict}'
 print(f'coef_time_male_mayfly_volocity = {coef_time_male_mayfly_volocity}')
 print(f'male_mayfly_gbest_minus_xi = {male_mayfly_gbest_minus_xi}')
 
-
+#hum yai jing jing
 
 
 
