@@ -1,0 +1,234 @@
+<html>
+<head>
+<title>Q_Function_Demo01.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cf8e6d;}
+.s1 { color: #bcbec4;}
+.s2 { color: #bcbec4;}
+.s3 { color: #2aacb8;}
+.s4 { color: #6aab73;}
+.s5 { color: #7a7e85;}
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+Q_Function_Demo01.py</font>
+</center></td></tr></table>
+<pre><span class="s0">import </span><span class="s1">pandas </span><span class="s0">as </span><span class="s1">pd</span>
+<span class="s0">import </span><span class="s1">random</span>
+<span class="s1">random</span><span class="s2">.</span><span class="s1">seed</span><span class="s2">(</span><span class="s3">1234</span><span class="s2">)</span>
+
+<span class="s1">df_item_sas_random </span><span class="s2">= </span><span class="s1">pd</span><span class="s2">.</span><span class="s1">read_csv</span><span class="s2">(</span><span class="s4">'df_item_sas_random.csv'</span><span class="s2">)</span>
+<span class="s1">df_duedate </span><span class="s2">= </span><span class="s1">pd</span><span class="s2">.</span><span class="s1">read_csv</span><span class="s2">(</span><span class="s4">'duedate_2l-20-45-0.csv'</span><span class="s2">, </span><span class="s1">header</span><span class="s2">=</span><span class="s0">None</span><span class="s2">)</span>
+<span class="s1">df_item_order </span><span class="s2">= </span><span class="s1">pd</span><span class="s2">.</span><span class="s1">read_csv</span><span class="s2">(</span><span class="s4">'input_location_item_2l-20-45-0.csv'</span><span class="s2">, </span><span class="s1">header</span><span class="s2">=</span><span class="s0">None</span><span class="s2">)</span>
+
+<span class="s1">list_duedate </span><span class="s2">= </span><span class="s1">df_duedate</span><span class="s2">[</span><span class="s3">0</span><span class="s2">].</span><span class="s1">tolist</span><span class="s2">()</span>
+
+<span class="s1">num_order </span><span class="s2">= </span><span class="s1">df_item_order</span><span class="s2">.</span><span class="s1">shape</span><span class="s2">[</span><span class="s3">1</span><span class="s2">]</span>
+<span class="s1">list_order </span><span class="s2">= []</span>
+<span class="s1">list_total_item </span><span class="s2">= []</span>
+<span class="s1">df_item_pool </span><span class="s2">= </span><span class="s1">pd</span><span class="s2">.</span><span class="s1">DataFrame</span><span class="s2">()</span>
+
+<span class="s0">for </span><span class="s1">order </span><span class="s0">in </span><span class="s1">range</span><span class="s2">(</span><span class="s1">num_order</span><span class="s2">):</span>
+    <span class="s1">item </span><span class="s2">= </span><span class="s1">df_item_order</span><span class="s2">[</span><span class="s1">order</span><span class="s2">][</span><span class="s1">df_item_order</span><span class="s2">[</span><span class="s1">order</span><span class="s2">] != </span><span class="s3">0</span><span class="s2">]</span>
+    <span class="s1">df_item_in_this_order </span><span class="s2">= </span><span class="s1">df_item_sas_random</span><span class="s2">[</span><span class="s1">df_item_sas_random</span><span class="s2">[</span><span class="s4">'location'</span><span class="s2">].</span><span class="s1">isin</span><span class="s2">(</span><span class="s1">item</span><span class="s2">)].</span><span class="s1">copy</span><span class="s2">()</span>
+    <span class="s1">df_item_in_this_order</span><span class="s2">[</span><span class="s4">'duedate'</span><span class="s2">] = </span><span class="s1">list_duedate</span><span class="s2">[</span><span class="s1">order</span><span class="s2">]</span>
+    <span class="s1">df_item_pool </span><span class="s2">= </span><span class="s1">pd</span><span class="s2">.</span><span class="s1">concat</span><span class="s2">([</span><span class="s1">df_item_pool</span><span class="s2">, </span><span class="s1">df_item_in_this_order</span><span class="s2">])</span>
+    <span class="s1">num_item_this_order </span><span class="s2">= </span><span class="s1">df_item_in_this_order</span><span class="s2">.</span><span class="s1">shape</span><span class="s2">[</span><span class="s3">0</span><span class="s2">]</span>
+    <span class="s0">for </span><span class="s1">i </span><span class="s0">in </span><span class="s1">range</span><span class="s2">(</span><span class="s1">num_item_this_order</span><span class="s2">):</span>
+        <span class="s1">list_order</span><span class="s2">.</span><span class="s1">append</span><span class="s2">(</span><span class="s1">order</span><span class="s2">)</span>
+    <span class="s1">list_total_item</span><span class="s2">.</span><span class="s1">extend</span><span class="s2">(</span><span class="s1">item</span><span class="s2">.</span><span class="s1">tolist</span><span class="s2">())</span>
+
+<span class="s1">df_item_pool</span><span class="s2">[</span><span class="s4">'order'</span><span class="s2">] = </span><span class="s1">list_order</span>
+<span class="s1">df_item_pool</span><span class="s2">.</span><span class="s1">reset_index</span><span class="s2">(</span><span class="s1">drop</span><span class="s2">=</span><span class="s0">True</span><span class="s2">, </span><span class="s1">inplace</span><span class="s2">=</span><span class="s0">True</span><span class="s2">)</span>
+
+<span class="s1">num_item </span><span class="s2">= </span><span class="s1">df_item_pool</span><span class="s2">.</span><span class="s1">shape</span><span class="s2">[</span><span class="s3">0</span><span class="s2">]</span>
+<span class="s1">num_sol </span><span class="s2">= </span><span class="s3">3</span>
+<span class="s1">cur_sol </span><span class="s2">= []</span>
+
+<span class="s5"># ก่อนปรับปรุงเป็น list comprehension</span>
+<span class="s5"># for sol in range(num_sol):</span>
+<span class="s5">#     now_sol = list(range(num_item))</span>
+<span class="s5">#     random.shuffle(now_sol)</span>
+<span class="s5">#     cur_sol.append(now_sol)</span>
+
+<span class="s1">cur_sol</span><span class="s2">= [</span><span class="s1">random</span><span class="s2">.</span><span class="s1">sample</span><span class="s2">(</span><span class="s1">range</span><span class="s2">(</span><span class="s1">num_item</span><span class="s2">), </span><span class="s1">num_item</span><span class="s2">) </span><span class="s0">for </span><span class="s1">_ </span><span class="s0">in </span><span class="s1">range</span><span class="s2">(</span><span class="s1">num_sol</span><span class="s2">)] </span><span class="s5"># หลังจากปรับปรุงเป็น list comprehension</span>
+
+<span class="s5"># ก่อนปรับปรุงเป็น list comprehension</span>
+<span class="s5"># def sol_from_list_to_arc(sol):</span>
+<span class="s5">#     num_item = len(sol)</span>
+<span class="s5">#     arc_sol = []</span>
+<span class="s5">#     for i in range(num_item - 1):</span>
+<span class="s5">#         arc_sol.append((sol[i], sol[i + 1]))</span>
+<span class="s5">#     return arc_sol</span>
+<span class="s0">def </span><span class="s1">sol_from_list_to_arc</span><span class="s2">(</span><span class="s1">sol</span><span class="s2">):</span>
+    <span class="s0">return </span><span class="s2">[(</span><span class="s1">sol</span><span class="s2">[</span><span class="s1">i</span><span class="s2">], </span><span class="s1">sol</span><span class="s2">[</span><span class="s1">i </span><span class="s2">+ </span><span class="s3">1</span><span class="s2">]) </span><span class="s0">for </span><span class="s1">i </span><span class="s0">in </span><span class="s1">range</span><span class="s2">(</span><span class="s1">len</span><span class="s2">(</span><span class="s1">sol</span><span class="s2">) - </span><span class="s3">1</span><span class="s2">)] </span><span class="s5"># หลังจากปรับปรุงเป็น list comprehension</span>
+
+
+<span class="s1">arc_sol </span><span class="s2">= </span><span class="s1">sol_from_list_to_arc</span><span class="s2">(</span><span class="s1">cur_sol</span><span class="s2">[</span><span class="s3">0</span><span class="s2">])</span>
+
+<span class="s0">def </span><span class="s1">all_sols_from_list_to_arc</span><span class="s2">(</span><span class="s1">all_sols</span><span class="s2">):</span>
+    <span class="s1">num_sol </span><span class="s2">= </span><span class="s1">len</span><span class="s2">(</span><span class="s1">all_sols</span><span class="s2">)</span>
+    <span class="s1">num_item </span><span class="s2">= </span><span class="s1">len</span><span class="s2">(</span><span class="s1">all_sols</span><span class="s2">[</span><span class="s3">0</span><span class="s2">])</span>
+    <span class="s1">all_arc_sols </span><span class="s2">= [[(</span><span class="s1">all_sols</span><span class="s2">[</span><span class="s1">i</span><span class="s2">][</span><span class="s1">j</span><span class="s2">], </span><span class="s1">all_sols</span><span class="s2">[</span><span class="s1">i</span><span class="s2">][</span><span class="s1">j </span><span class="s2">+ </span><span class="s3">1</span><span class="s2">]) </span><span class="s0">for </span><span class="s1">j </span><span class="s0">in </span><span class="s1">range</span><span class="s2">(</span><span class="s1">num_item </span><span class="s2">- </span><span class="s3">1</span><span class="s2">)] </span><span class="s0">for </span><span class="s1">i </span><span class="s0">in </span><span class="s1">range</span><span class="s2">(</span><span class="s1">num_sol</span><span class="s2">)]</span>
+    <span class="s0">return </span><span class="s1">all_arc_sols</span>
+<span class="s1">all_arc_sols </span><span class="s2">= </span><span class="s1">all_sols_from_list_to_arc</span><span class="s2">(</span><span class="s1">cur_sol</span><span class="s2">)</span>
+
+<span class="s5"># ก่อนปรับปรุงเป็น list comprehension</span>
+<span class="s5"># def cut_arc_sol(arc_sol):</span>
+<span class="s5">#     num_item = len(arc_sol) + 1</span>
+<span class="s5">#     arc_sol_dict = {item: [] for item in range(num_item)}</span>
+<span class="s5">#     for arc in arc_sol:</span>
+<span class="s5">#         arc_sol_dict[arc[0]].append(arc)</span>
+<span class="s5">#         arc_sol_dict[arc[1]].append(arc)</span>
+<span class="s5">#</span>
+<span class="s5">#     arc_sol_cut = [arc_sol_dict[item] for item in range(num_item)]</span>
+<span class="s5">#</span>
+<span class="s5">#     return arc_sol_cut</span>
+<span class="s0">def </span><span class="s1">cut_arc_sol</span><span class="s2">(</span><span class="s1">arc_sol</span><span class="s2">): </span><span class="s5"># หลังจากปรับปรุงเป็น list comprehension</span>
+    <span class="s0">return </span><span class="s2">[{</span><span class="s1">arc </span><span class="s0">for </span><span class="s1">arc </span><span class="s0">in </span><span class="s1">arc_sol </span><span class="s0">if </span><span class="s1">arc</span><span class="s2">[</span><span class="s3">0</span><span class="s2">] == </span><span class="s1">item </span><span class="s0">or </span><span class="s1">arc</span><span class="s2">[</span><span class="s3">1</span><span class="s2">] == </span><span class="s1">item</span><span class="s2">} </span><span class="s0">for </span><span class="s1">item </span><span class="s0">in </span><span class="s1">range</span><span class="s2">(</span><span class="s1">len</span><span class="s2">(</span><span class="s1">arc_sol</span><span class="s2">) + </span><span class="s3">1</span><span class="s2">)]</span>
+<span class="s1">arc_sol_cut </span><span class="s2">= </span><span class="s1">cut_arc_sol</span><span class="s2">(</span><span class="s1">all_arc_sols</span><span class="s2">[</span><span class="s3">0</span><span class="s2">])</span>
+
+<span class="s5"># ก่อนปรับปรุงเป็น list comprehension</span>
+<span class="s5"># def init_velocity_sol(arc_sol_cut):</span>
+<span class="s5">#     num_item = len(arc_sol_cut)</span>
+<span class="s5">#     arc_sol_velocity_dict = [{} for _ in range(num_item)]</span>
+<span class="s5">#     for item in range(num_item):</span>
+<span class="s5">#         for arc in arc_sol_cut[item]:</span>
+<span class="s5">#             arc_sol_velocity_dict[item][arc] = round(random.random(), 4)</span>
+<span class="s5">#     return arc_sol_velocity_dict</span>
+<span class="s0">def </span><span class="s1">init_velocity_sol</span><span class="s2">(</span><span class="s1">arc_sol_cut</span><span class="s2">):</span><span class="s5"># หลังจากปรับปรุงเป็น list comprehension</span>
+    <span class="s0">return </span><span class="s2">[{</span><span class="s1">arc</span><span class="s2">: </span><span class="s1">round</span><span class="s2">(</span><span class="s1">random</span><span class="s2">.</span><span class="s1">random</span><span class="s2">(), </span><span class="s3">4</span><span class="s2">) </span><span class="s0">for </span><span class="s1">arc </span><span class="s0">in </span><span class="s1">arc_list</span><span class="s2">} </span><span class="s0">for </span><span class="s1">arc_list </span><span class="s0">in </span><span class="s1">arc_sol_cut</span><span class="s2">]</span>
+
+<span class="s1">arc_sol_velocity_dict </span><span class="s2">= </span><span class="s1">init_velocity_sol</span><span class="s2">(</span><span class="s1">arc_sol_cut</span><span class="s2">)</span>
+<span class="s1">print</span><span class="s2">(</span><span class="s4">f'arc_sol_velocity_cut = </span><span class="s0">{</span><span class="s1">arc_sol_velocity_dict</span><span class="s0">}</span><span class="s4">'</span><span class="s2">)</span>
+
+<span class="s5"># ปรับปรุงความเร็ว vit+1 = wvti + c1r1(Pbest - xi) + c2r2(Gbest - xi)</span>
+
+<span class="s5"># ก่อนปรับปรุงเป็น list comprehension</span>
+<span class="s5"># def coef_time_volocity(coef,arc_sol_velocity_dict):</span>
+<span class="s5">#     num_item = len(arc_sol_velocity_dict)</span>
+<span class="s5">#     coef_time_volocity_dict = [{} for item in range(num_item)]</span>
+<span class="s5">#     #[{} {} {} ...]</span>
+<span class="s5">#     for item in range(num_item):</span>
+<span class="s5">#         for arc in arc_sol_velocity_dict[item].keys():</span>
+<span class="s5">#             if coef*arc_sol_velocity_dict[item][arc] &gt; 1:</span>
+<span class="s5">#                 coef_time_volocity_dict[item][arc] = 1</span>
+<span class="s5">#             else:</span>
+<span class="s5">#                 coef_time_volocity_dict[item][arc] = round(coef*arc_sol_velocity_dict[item][arc],4)</span>
+<span class="s5">#     return  coef_time_volocity_dict</span>
+
+<span class="s5"># หลังจากปรับปรุงเป็น list comprehension</span>
+<span class="s0">def </span><span class="s1">coef_time_volocity</span><span class="s2">(</span><span class="s1">coef</span><span class="s2">, </span><span class="s1">arc_sol_velocity_dict</span><span class="s2">):</span>
+    <span class="s0">return </span><span class="s2">[</span>
+        <span class="s2">{</span><span class="s1">arc</span><span class="s2">: </span><span class="s1">min</span><span class="s2">(</span><span class="s3">1</span><span class="s2">, </span><span class="s1">round</span><span class="s2">(</span><span class="s1">coef </span><span class="s2">* </span><span class="s1">speed</span><span class="s2">, </span><span class="s3">4</span><span class="s2">)) </span><span class="s0">for </span><span class="s1">arc</span><span class="s2">, </span><span class="s1">speed </span><span class="s0">in </span><span class="s1">velocity_dict</span><span class="s2">.</span><span class="s1">items</span><span class="s2">()}</span>
+        <span class="s0">for </span><span class="s1">velocity_dict </span><span class="s0">in </span><span class="s1">arc_sol_velocity_dict</span>
+    <span class="s2">]</span>
+<span class="s1">coef_time_volocity_dict </span><span class="s2">= </span><span class="s1">coef_time_volocity</span><span class="s2">(</span><span class="s3">0.7</span><span class="s2">,</span><span class="s1">arc_sol_velocity_dict</span><span class="s2">)</span>
+<span class="s1">print</span><span class="s2">(</span><span class="s4">f'coef_time_volocity_dict = </span><span class="s0">{</span><span class="s1">coef_time_volocity_dict</span><span class="s0">}</span><span class="s4">'</span><span class="s2">)</span>
+
+<span class="s5"># #[[(0,1),(2,0)],[(0,1),(1,22)] .... ]</span>
+<span class="s1">arc_first </span><span class="s2">= [[(</span><span class="s3">0</span><span class="s2">,</span><span class="s3">2</span><span class="s2">)],[(</span><span class="s3">2</span><span class="s2">,</span><span class="s3">1</span><span class="s2">)],[(</span><span class="s3">0</span><span class="s2">,</span><span class="s3">2</span><span class="s2">),(</span><span class="s3">2</span><span class="s2">,</span><span class="s3">1</span><span class="s2">)]]</span>
+<span class="s1">arc_second </span><span class="s2">= [[(</span><span class="s3">0</span><span class="s2">,</span><span class="s3">1</span><span class="s2">)],[(</span><span class="s3">0</span><span class="s2">,</span><span class="s3">1</span><span class="s2">),(</span><span class="s3">1</span><span class="s2">,</span><span class="s3">2</span><span class="s2">)],[(</span><span class="s3">1</span><span class="s2">,</span><span class="s3">2</span><span class="s2">)]]</span>
+
+<span class="s5"># ก่อนปรับปรุงเป็น list comprehension</span>
+<span class="s5"># def position_minus_position(arc_first,arc_second):</span>
+<span class="s5">#     num_item = len(arc_first)</span>
+<span class="s5">#     pos_minus_pos = [[] for item in range(num_item)]</span>
+<span class="s5">#     for item in range(num_item):</span>
+<span class="s5">#         for arc in arc_first[item]:</span>
+<span class="s5">#             if arc not in arc_second[item]:</span>
+<span class="s5">#                 pos_minus_pos[item].append(arc)</span>
+<span class="s5">#     return pos_minus_pos</span>
+
+<span class="s5"># หลังจากปรับปรุงเป็น list comprehension</span>
+<span class="s0">def </span><span class="s1">position_minus_position</span><span class="s2">(</span><span class="s1">arc_first</span><span class="s2">, </span><span class="s1">arc_second</span><span class="s2">):</span>
+    <span class="s0">return </span><span class="s2">[[</span><span class="s1">arc </span><span class="s0">for </span><span class="s1">arc </span><span class="s0">in </span><span class="s1">first_set </span><span class="s0">if </span><span class="s1">arc </span><span class="s0">not in </span><span class="s1">second_set</span><span class="s2">] </span><span class="s0">for </span><span class="s1">first_set</span><span class="s2">, </span><span class="s1">second_set </span><span class="s0">in </span><span class="s1">zip</span><span class="s2">(</span><span class="s1">arc_first</span><span class="s2">, </span><span class="s1">arc_second</span><span class="s2">)]</span>
+<span class="s1">pos_minus_pos </span><span class="s2">= </span><span class="s1">position_minus_position</span><span class="s2">(</span><span class="s1">arc_first</span><span class="s2">,</span><span class="s1">arc_second</span><span class="s2">)</span>
+<span class="s1">print</span><span class="s2">(</span><span class="s4">f'pos_minus_pos = </span><span class="s0">{</span><span class="s1">pos_minus_pos</span><span class="s0">}</span><span class="s4">'</span><span class="s2">)</span>
+
+<span class="s5">#arc_diff = [[(0, 2)], [(2, 1)], [(0, 2), (2, 1)]]</span>
+
+<span class="s5"># ก่อนปรับปรุงเป็น list comprehension</span>
+<span class="s5"># def coef_time_position_MrGumNhud(c_value, arc_diff):</span>
+<span class="s5">#     import random</span>
+<span class="s5">#     num_item = len(arc_diff)</span>
+<span class="s5">#     coef_time_position_dict = [{} for item in range(num_item)]</span>
+<span class="s5">#     for item in range (num_item):</span>
+<span class="s5">#         for arc in arc_diff[item]:</span>
+<span class="s5">#             coef = c_value*random.random()</span>
+<span class="s5">#             if coef &gt; 1 :</span>
+<span class="s5">#                 coef = 1</span>
+<span class="s5">#             coef_time_position_dict[item][arc] = round(coef,4)</span>
+<span class="s5">#     return coef_time_position_dict</span>
+
+<span class="s5"># หลังจากปรับปรุงเป็น list comprehension</span>
+<span class="s0">def </span><span class="s1">coef_time_position_MrGumNhud</span><span class="s2">(</span><span class="s1">c_value</span><span class="s2">, </span><span class="s1">arc_diff</span><span class="s2">):</span>
+    <span class="s0">return </span><span class="s2">[</span>
+        <span class="s2">{</span><span class="s1">arc</span><span class="s2">: </span><span class="s1">round</span><span class="s2">(</span><span class="s1">min</span><span class="s2">(</span><span class="s1">c_value </span><span class="s2">* </span><span class="s1">random</span><span class="s2">.</span><span class="s1">random</span><span class="s2">(), </span><span class="s3">1</span><span class="s2">), </span><span class="s3">4</span><span class="s2">) </span><span class="s0">for </span><span class="s1">arc </span><span class="s0">in </span><span class="s1">diff_list</span><span class="s2">}</span>
+        <span class="s0">for </span><span class="s1">diff_list </span><span class="s0">in </span><span class="s1">arc_diff</span>
+    <span class="s2">]</span>
+
+<span class="s1">coef_time_position </span><span class="s2">= </span><span class="s1">coef_time_position_MrGumNhud</span><span class="s2">(</span><span class="s3">2</span><span class="s2">,</span><span class="s1">pos_minus_pos</span><span class="s2">)</span>
+<span class="s1">print</span><span class="s2">(</span><span class="s4">f'coef_time_position = </span><span class="s0">{</span><span class="s1">coef_time_position</span><span class="s0">}</span><span class="s4">'</span><span class="s2">)</span>
+
+<span class="s1">v_first </span><span class="s2">= [{(</span><span class="s3">0</span><span class="s2">,</span><span class="s3">1</span><span class="s2">):</span><span class="s3">0.5</span><span class="s2">, (</span><span class="s3">2</span><span class="s2">,</span><span class="s3">0</span><span class="s2">):</span><span class="s3">0.3</span><span class="s2">}, {(</span><span class="s3">0</span><span class="s2">,</span><span class="s3">1</span><span class="s2">):</span><span class="s3">0.6</span><span class="s2">}, {(</span><span class="s3">2</span><span class="s2">,</span><span class="s3">0</span><span class="s2">):</span><span class="s3">0.4</span><span class="s2">}] </span><span class="s5">#2 0 1</span>
+<span class="s1">v_second </span><span class="s2">= [{(</span><span class="s3">2</span><span class="s2">,</span><span class="s3">0</span><span class="s2">):</span><span class="s3">0.2</span><span class="s2">}, {(</span><span class="s3">1</span><span class="s2">,</span><span class="s3">2</span><span class="s2">):</span><span class="s3">0.9</span><span class="s2">}, {(</span><span class="s3">2</span><span class="s2">,</span><span class="s3">0</span><span class="s2">):</span><span class="s3">0.5</span><span class="s2">, (</span><span class="s3">1</span><span class="s2">,</span><span class="s3">2</span><span class="s2">):</span><span class="s3">0.8</span><span class="s2">}] </span><span class="s5">#1 2 0</span>
+<span class="s5">#added_v = [{(0,1):0.5, (2,0):0.3}, {(0,1):0.6, (1,2):0.9}, {(2,0):0.5, (1,2):0.8}]</span>
+<span class="s0">def </span><span class="s1">add_velocity</span><span class="s2">(</span><span class="s1">velocity_fiest</span><span class="s2">, </span><span class="s1">velocity_second</span><span class="s2">):</span>
+    <span class="s1">num_item </span><span class="s2">= </span><span class="s1">len</span><span class="s2">(</span><span class="s1">velocity_fiest</span><span class="s2">)</span>
+    <span class="s1">added_velocity_dict </span><span class="s2">= [{} </span><span class="s0">for </span><span class="s1">item </span><span class="s0">in </span><span class="s1">range</span><span class="s2">(</span><span class="s1">num_item</span><span class="s2">)]</span>
+    <span class="s0">for </span><span class="s1">item </span><span class="s0">in </span><span class="s1">range</span><span class="s2">(</span><span class="s1">num_item</span><span class="s2">):</span>
+        <span class="s0">for </span><span class="s1">arc </span><span class="s0">in </span><span class="s1">velocity_fiest</span><span class="s2">[</span><span class="s1">item</span><span class="s2">]:</span>
+            <span class="s1">added_velocity_dict</span><span class="s2">[</span><span class="s1">item</span><span class="s2">][</span><span class="s1">arc</span><span class="s2">] = </span><span class="s1">velocity_fiest</span><span class="s2">[</span><span class="s1">item</span><span class="s2">][</span><span class="s1">arc</span><span class="s2">]</span>
+        <span class="s0">for </span><span class="s1">arc </span><span class="s0">in </span><span class="s1">velocity_second</span><span class="s2">[</span><span class="s1">item</span><span class="s2">]:</span>
+            <span class="s0">if </span><span class="s1">arc </span><span class="s0">in </span><span class="s1">added_velocity_dict</span><span class="s2">[</span><span class="s1">item</span><span class="s2">].</span><span class="s1">keys</span><span class="s2">():</span>
+                <span class="s0">if </span><span class="s1">velocity_second</span><span class="s2">[</span><span class="s1">item</span><span class="s2">][</span><span class="s1">arc</span><span class="s2">] &gt; </span><span class="s1">added_velocity_dict</span><span class="s2">[</span><span class="s1">item</span><span class="s2">][</span><span class="s1">arc</span><span class="s2">]:</span>
+                    <span class="s1">added_velocity_dict</span><span class="s2">[</span><span class="s1">item</span><span class="s2">][</span><span class="s1">arc</span><span class="s2">] = </span><span class="s1">velocity_second</span><span class="s2">[</span><span class="s1">item</span><span class="s2">][</span><span class="s1">arc</span><span class="s2">]</span>
+            <span class="s0">else</span><span class="s2">:</span>
+                <span class="s1">added_velocity_dict</span><span class="s2">[</span><span class="s1">item</span><span class="s2">][</span><span class="s1">arc</span><span class="s2">] = </span><span class="s1">velocity_second</span><span class="s2">[</span><span class="s1">item</span><span class="s2">][</span><span class="s1">arc</span><span class="s2">]</span>
+    <span class="s0">return </span><span class="s1">added_velocity_dict</span>
+
+<span class="s1">added_v </span><span class="s2">= </span><span class="s1">add_velocity</span><span class="s2">(</span><span class="s1">v_first</span><span class="s2">, </span><span class="s1">v_second</span><span class="s2">)</span>
+
+
+<span class="s1">print</span><span class="s2">(</span><span class="s4">'---------'</span><span class="s2">*</span><span class="s3">30</span><span class="s2">)</span>
+<span class="s5"># สร้างคำตอบเริ่มต้นสำหรับ Mayfly</span>
+<span class="s1">My_Mayfly_arc </span><span class="s2">= </span><span class="s1">all_sols_from_list_to_arc</span><span class="s2">(</span><span class="s1">cur_sol</span><span class="s2">)</span>
+
+<span class="s5"># แบ่งตำแหน่งของ Mayfly ออกเป็น Xi, Pbest และ Gbest</span>
+<span class="s1">My_Mayfly_Xi </span><span class="s2">= </span><span class="s1">cut_arc_sol</span><span class="s2">(</span><span class="s1">My_Mayfly_arc</span><span class="s2">[</span><span class="s3">0</span><span class="s2">])</span>
+<span class="s1">My_Mayfly_Pbest </span><span class="s2">= </span><span class="s1">cut_arc_sol</span><span class="s2">(</span><span class="s1">My_Mayfly_arc</span><span class="s2">[</span><span class="s3">1</span><span class="s2">])</span>
+<span class="s1">My_Mayfly_Gbest </span><span class="s2">= </span><span class="s1">cut_arc_sol</span><span class="s2">(</span><span class="s1">My_Mayfly_arc</span><span class="s2">[</span><span class="s3">2</span><span class="s2">])</span>
+
+<span class="s5"># สร้างความเร็วเริ่มต้นสำหรับ Mayfly </span>
+<span class="s1">My_Mayfly_Xi_velocity </span><span class="s2">= </span><span class="s1">init_velocity_sol</span><span class="s2">(</span><span class="s1">My_Mayfly_Xi</span><span class="s2">)</span>
+<span class="s1">My_Mayfly_Pbest_velocity </span><span class="s2">= </span><span class="s1">init_velocity_sol</span><span class="s2">(</span><span class="s1">My_Mayfly_Pbest</span><span class="s2">)</span>
+<span class="s1">My_Mayfly_Gbest_velocity </span><span class="s2">= </span><span class="s1">init_velocity_sol</span><span class="s2">(</span><span class="s1">My_Mayfly_Gbest</span><span class="s2">)</span>
+
+<span class="s5"># ใช้ค่าสัมประสิทธิ์กับความเร็ว Xi  vit+1 = wvti</span>
+<span class="s1">My_Mayfly_Xi_coef_time_velocity </span><span class="s2">= </span><span class="s1">coef_time_volocity</span><span class="s2">(</span><span class="s3">0.7</span><span class="s2">, </span><span class="s1">My_Mayfly_Xi_velocity</span><span class="s2">)</span>
+
+<span class="s5"># คำนวณความต่างของตำแหน่ง (Pbest - Xi) และ (Gbest - Xi)</span>
+<span class="s1">My_Mayfly_Pbest_Minus_Xi </span><span class="s2">= </span><span class="s1">position_minus_position</span><span class="s2">(</span><span class="s1">My_Mayfly_Pbest_velocity</span><span class="s2">, </span><span class="s1">My_Mayfly_Xi_velocity</span><span class="s2">)</span>
+<span class="s1">My_Mayfly_Gbest_Minus_Xi </span><span class="s2">= </span><span class="s1">position_minus_position</span><span class="s2">(</span><span class="s1">My_Mayfly_Gbest_velocity</span><span class="s2">, </span><span class="s1">My_Mayfly_Xi_velocity</span><span class="s2">)</span>
+
+<span class="s5"># ใช้ค่าสัมประสิทธิ์กับความต่างของตำแหน่ง c1r1(Pbest - Xi) และ c2r2(Gbest - Xi)</span>
+<span class="s1">My_Mayfly_Pbest_Minus_Xi_With_c1r1 </span><span class="s2">= </span><span class="s1">coef_time_position_MrGumNhud</span><span class="s2">(</span><span class="s3">2</span><span class="s2">, </span><span class="s1">My_Mayfly_Pbest_Minus_Xi</span><span class="s2">)</span>
+<span class="s1">My_Mayfly_Gbest_Minus_Xi_With_c1r1 </span><span class="s2">= </span><span class="s1">coef_time_position_MrGumNhud</span><span class="s2">(</span><span class="s3">2</span><span class="s2">, </span><span class="s1">My_Mayfly_Gbest_Minus_Xi</span><span class="s2">)</span>
+
+<span class="s5"># คำนวณความเร็วใหม่สำหรับ Mayfly  vit+1 = wvti + c1r1(Pbest - xi) + c2r2(Gbest - xi)</span>
+<span class="s1">My_Mayfly_New_Velocity </span><span class="s2">= </span><span class="s1">add_velocity</span><span class="s2">(</span><span class="s1">My_Mayfly_Pbest_Minus_Xi_With_c1r1</span><span class="s2">, </span><span class="s1">My_Mayfly_Gbest_Minus_Xi_With_c1r1</span><span class="s2">)</span>
+<span class="s1">New_velocity_for_Vit </span><span class="s2">= </span><span class="s1">add_velocity</span><span class="s2">(</span><span class="s1">My_Mayfly_Xi_coef_time_velocity</span><span class="s2">, </span><span class="s1">My_Mayfly_New_Velocity</span><span class="s2">)</span>
+
+<span class="s5"># แสดงผล</span>
+<span class="s1">print</span><span class="s2">(</span><span class="s4">f'New_velocity_for_Vit is </span><span class="s0">{</span><span class="s1">New_velocity_for_Vit</span><span class="s0">}</span><span class="s4">'</span><span class="s2">)</span>
+
+
+
+</pre>
+</body>
+</html>
