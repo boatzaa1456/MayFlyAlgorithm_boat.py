@@ -266,7 +266,7 @@ def gbest_minus_position(arc_gbest,arc_sol):
     return gbest_minus_xi
 
 
-print('---------'*30)
+print('---------'*17)
 
 num_item = df_item_pool.shape[0]
 num_sol = 5
@@ -291,17 +291,17 @@ coef_time_male_mayfly_volocity = coef_time_volocity(0.5,arc_sol_male_mayfly_velo
 male_mayfly_pbest_minus_xi = position_minus_position(arc_pbest_male_mayfly,arc_sol_male_mayfly)
 male_mayfly_gbest_minus_xi = gbest_minus_position(arc_gbest_mayfly,arc_sol_male_mayfly)
 added_coef_to_male_mayfly_form_pbest_diff = coef_time_position_MrGumNhud(0.7,male_mayfly_pbest_minus_xi)
-added_coef_to_male_mayfly_form_gbest_diff = coef_time_position_MrGumNhud(0.7,male_mayfly_pbest_minus_xi)
+added_coef_to_male_mayfly_form_gbest_diff = coef_time_position_MrGumNhud(0.7,male_mayfly_gbest_minus_xi)
+added_diff_form_pbest_and_gbest_malemayfly = add_velocity(added_coef_to_male_mayfly_form_pbest_diff,added_coef_to_male_mayfly_form_gbest_diff)
+new_male_mayfly_velocity = add_velocity(coef_time_male_mayfly_volocity,added_diff_form_pbest_and_gbest_malemayfly)
 
-print(f'added_coef_to_male_mayfly_form_pbest_diff = {added_coef_to_male_mayfly_form_pbest_diff}')
-print(f'added_coef_to_male_mayfly_form_gbest_diff = {added_coef_to_male_mayfly_form_gbest_diff}')
-
-
+print(f'coef_time_male_mayfly_volocity = {coef_time_male_mayfly_volocity}')
+print(f'added_diff_form_pbest_and_gbest_malemayfly {added_diff_form_pbest_and_gbest_malemayfly}')
 
 #female mayfly
 coef_time_female_mayfly_volocity = coef_time_volocity(0.5,arc_sol_female_mayfly_velocity_dict)
 
-#test
+
 
 
 
