@@ -1,24 +1,18 @@
 import pandas as pd
 import random
-from evaluate_all_sols import *
-
-# ตั้งค่า seed สำหรับ random เพื่อให้ผลลัพธ์เป็นไปอย่างสม่ำเสมอ
+from evaluate_all_sols  import *
 random.seed(1234)
 
-# โหลดข้อมูลจากไฟล์ CSV และเตรียมข้อมูลที่จำเป็น
-df_item_sas_random = pd.read_csv('df_item_sas_random.csv')  # โหลดข้อมูลสุ่ม
-name_path_input = '1I-10-100-2'  # ตั้งชื่อ path สำหรับไฟล์ข้อมูล
-df_duedate = pd.read_csv(name_path_input + '\\duedate_' + name_path_input + '.csv', header=None)  # โหลดข้อมูล duedate
-df_item_order = pd.read_csv(name_path_input + '\\input_location_item_' + name_path_input + '.csv', header=None)  # โหลดข้อมูล item order
+df_item_sas_random = pd.read_csv('df_item_sas_random.csv')
+name_path_input = '1I-10-100-2'
+df_duedate = pd.read_csv(name_path_input +'\\duedate_'+name_path_input +'.csv', header=None)
+df_item_order = pd.read_csv(name_path_input + '\\input_location_item_'+ name_path_input +'.csv', header=None)
 
-# แปลงข้อมูลใน DataFrame เป็นรายการ
 list_duedate = df_duedate[0].tolist()
 
-# กำหนดจำนวน order และเตรียมรายการ order และ total item
 num_order = df_item_order.shape[1]
 list_order = []
 list_total_item = []
-
 df_item_pool = pd.DataFrame()
 
 for order in range(num_order):
@@ -170,8 +164,7 @@ def check_velocity_inconsistency(added_velocity_dict):
     num_item = len(added_velocity_dict)
     import copy
     # new_added_velocity_dict = copy.deepcopy(added_velocity_dict)
-    new_added_velocity_dict = [{arc: prob for arc, prob in added_velocity_dict[item].items()} for item in
-                               range(num_item)]
+    new_added_velocity_dict = [{arc: prob for arc, prob in added_velocity_dict[item].items()} for item in range(num_item)]
     print(new_added_velocity_dict)
     for item in range(num_item):
         for arc_first in added_velocity_dict[item].keys():
@@ -262,11 +255,21 @@ def process_mayfly_data(tardiness_male, tardiness_female, batch_list_male, batch
 
     return cur_sol_mayfly_gbest, cur_sol_male_mayfly, cur_sol_female_mayfly, pbest_male_batches, pbest_female_batches
 
+#ฟังก์ชั่น (gbest - xi)
+def gbest_minus_position(arc_gbest,arc_sol):
+    num_item = len(arc_sol)
+    gbest_minus_xi = [[] for item in range(num_item)]
+    for item in range(num_item):
+        for arc in arc_gbest:
+            if arc not in arc_sol[item]:
+                gbest_minus_xi[item].append(arc)
+    return gbest_minus_xi
+
+
 print('---------'*30)
 
 num_item = df_item_pool.shape[0]
 num_sol = 5
-t = 50
 
 #initialize the mayfly population
 male_mayfly_population = initialize_mayfly_population(num_sol,num_item)
@@ -286,18 +289,17 @@ arc_sol_male_mayfly_velocity_dict, arc_sol_female_mayfly_velocity_dict = init_al
 #male mayfly
 coef_time_male_mayfly_volocity = coef_time_volocity(0.5,arc_sol_male_mayfly_velocity_dict)
 male_mayfly_pbest_minus_xi = position_minus_position(arc_pbest_male_mayfly,arc_sol_male_mayfly)
-male_mayfly_gbest_minus_xi =position_minus_position(arc_gbest_mayfly,arc_sol_male_mayfly[0])
+male_mayfly_gbest_minus_xi = gbest_minus_position(arc_gbest_mayfly,arc_sol_male_mayfly)
+added_coef_to_male_mayfly_form_pbest_diff = coef_time_position_MrGumNhud(0.7,male_mayfly_pbest_minus_xi)
+added_coef_to_male_mayfly_form_gbest_diff = coef_time_position_MrGumNhud(0.7,male_mayfly_pbest_minus_xi)
+
+print(f'added_coef_to_male_mayfly_form_pbest_diff = {added_coef_to_male_mayfly_form_pbest_diff}')
+print(f'added_coef_to_male_mayfly_form_gbest_diff = {added_coef_to_male_mayfly_form_gbest_diff}')
 
 
 
-
-print(male_mayfly_pbest_minus_xi)
-print(f'arc_sol_male_mayfly_velocity_dict = {arc_sol_male_mayfly_velocity_dict}')
-print(f'coef_time_male_mayfly_volocity = {coef_time_male_mayfly_volocity}')
-print(f'male_mayfly_gbest_minus_xi = {male_mayfly_gbest_minus_xi}')
-
-#hum yai jing jing
-
+#female mayfly
+coef_time_female_mayfly_volocity = coef_time_volocity(0.5,arc_sol_female_mayfly_velocity_dict)
 
 
 
