@@ -297,7 +297,7 @@ print(f'coef_time_male_mayfly_volocity = {coef_time_male_mayfly_volocity}')
 print(f'male_mayfly_gbest_minus_xi = {male_mayfly_gbest_minus_xi}')
 
 
-coef_time_female_mayfly_volocity = coef_time_volocity(0.5,arc_sol_female_mayfly_velocity_dict)
+
 
 
 
