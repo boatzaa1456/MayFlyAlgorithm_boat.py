@@ -3,53 +3,6 @@ import random
 random.seed(1234)
 from evaluate_all_sols import *
 
-# df_item_sas_random = pd.read_csv('df_item_sas_random.csv')
-# # print(df_item_sas_random)
-#
-# name_path_input = '1I-10-100-2'
-#
-# df_duedate = pd.read_csv(name_path_input+'\\duedate_'+name_path_input+'.csv', header=None)
-# # print(df_duedate)
-#
-# df_item_oder = pd.read_csv(name_path_input+'\\input_location_item_'+name_path_input+'.csv', header=None)
-# # print(df_item_oder)
-#
-# list_duedate = df_duedate[0].values
-# list_duedate = df_duedate[0].tolist()
-# # print(list_duedate)
-# # print(type(list_duedate))
-#
-# num_order = df_item_oder.shape[1]
-# # print(num_order)
-#
-# list_order = [] #ทำหน้าที่ในการเก็บเลข order ของแต่ละ Item
-# list_total_item = [] #ทำหน้าที่ในการเก็บเลข item ตามลำดับ order
-#
-# df_item_pool = pd.DataFrame()
-#
-#
-# for order in range(num_order):
-#     item = df_item_oder[order][df_item_oder[order] != 0]
-#     print(item)
-#     print(df_item_sas_random['location'].isin(item))
-#     df_item_in_this_order = df_item_sas_random[df_item_sas_random['location'].isin(item)]
-#     df_item_in_this_order['duedate'] = list_duedate[order]
-#     print(df_item_in_this_order)
-#     df_item_pool = pd.concat([df_item_pool,df_item_in_this_order])
-#     print(df_item_pool)
-#
-#     num_item_this_order = df_item_in_this_order.shape[0]
-#     for i in range(num_item_this_order):
-#         list_order.append(order)
-#     # print(list_order)
-#     list_total_item.extend(item.tolist())
-#     # print(list_total_item)
-# # print(df_item_pool)
-# df_item_pool['order'] = list_order
-# # print(df_item_pool)
-# df_item_pool.reset_index(drop=True,inplace=True)
-# # print(df_item_pool)
-
 def read_input(name_path_input):
     df_item_sas_random = pd.read_csv('df_item_sas_random.csv')
     # print(df_item_sas_random)
@@ -100,18 +53,6 @@ def read_input(name_path_input):
 # num_item = df_item_pool.shape[0]
 num_sol = 5 #จำนวนคำตอบในแต่ละรอบ
 cur_sol = []
-#
-# #now_sol = list(range(num_item))
-# for sol in range(num_sol):
-#     now_sol = list(range(num_item))
-#     random.shuffle(now_sol)
-#     cur_sol.append(now_sol)
-# # print(cur_sol)
-#
-# a,b,c = evaluate_all_sols(cur_sol[0], df_item_pool, name_path_input)
-# # print(a)
-# # print(b)
-# # print(c)
 
 
 #แปลงจาก list ให้กลายเป็น arc ต้องรู้ว่ามีทั้งหมดกี่ตัว
@@ -182,7 +123,7 @@ def coef_times_velocity(coef,arc_sol_velocity_dict):
             if coef*arc_sol_velocity_dict[item][arc] >1:
                 coef_times_velocity_dict[item][arc] = 1
             else:
-                coef_times_velocity_dict[item][arc] = coef*arc_sol_velocity_dict[item][arc]
+                coef_times_velocity_dict[item][arc] = round(coef*arc_sol_velocity_dict[item][arc],4)
     return coef_times_velocity_dict
 # coef_times_velocity_dict = coef_times_velocity(0.7,arc_sol_velocity_dict)
 # print(coef_times_velocity_dict)
@@ -305,116 +246,174 @@ def sol_position_update(cut_set, previous_x, sub_E_list, alpha, start_previous_x
 
     return picked_list, picked_list_arc
 
-#random.seed(1234)
-#print('-----'*30)
-#print(f'My cur_sol is {cur_sol}')
-#all_arc_cur_sol = all_sol_from_list_to_arc(cur_sol)
-#print(f'My arc_cur_sol is {all_arc_cur_sol}')
-
-#all_cut_arc_sols = []
-#for sol in range(num_sol):
-    #cur_sol_cut = cut_arc_sol(all_arc_cur_sol[sol])
-    #all_cut_arc_sols.append(cur_sol_cut)
-
-#print(f'My all_cut_arc_sols is {all_cut_arc_sols}')
-
-#all_velocity_sol = []
-#for sol in range(num_sol):
-    #cur_sol_velocity = init_velocity_sol(all_cut_arc_sols[sol])
-    #all_velocity_sol.append(cur_sol_velocity)
-
-#print(f'My all_velocity_sol is {all_velocity_sol}')
-
-# สร้างคำตอบเริ่มต้นของ Mayfly
-#My_Mayfly_arc = all_sol_from_list_to_arc(cur_sol)
-#print(f'My_Mayfly_arc is {My_Mayfly_arc}')
-
-# ตำแหน่ง
-# Mayfly Posision xi
-#My_Mayfly_xi = cut_arc_sol(My_Mayfly_arc[0])
-#print(f'My_Mayfly_xi is {My_Mayfly_xi}')
-# Mayfly pbest
-#My_Mayfly_pbest = cut_arc_sol(My_Mayfly_arc[1])
-#print(f'My_Mayfly_pbest is {My_Mayfly_pbest}')
-# Mayfly gbest
-#My_Mayfly_gbest = cut_arc_sol(My_Mayfly_arc[2])
-#print(f'My_Mayfly_gbest is {My_Mayfly_gbest}')
-
-# ความเร็วเริ่มต้น
-# Mayfly Velocity xi
-#My_Mayfly_xi_velocity = init_velocity_sol(My_Mayfly_xi)
-# Mayfly Velocity pbest
-#My_Mayfly_pbest_velocity = init_velocity_sol(My_Mayfly_pbest)
-# Mayfly Velocity gbest
-#My_Mayfly_gbest_velocity = init_velocity_sol(My_Mayfly_gbest)
-
-# w*Vt
-#My_Mayfly_xi_coef_time_velocity_dict = coef_times_velocity(0.7,My_Mayfly_xi_velocity)
-#print(f'My_Mayfly_xi_coef_time_velocity_dict is {My_Mayfly_xi_coef_time_velocity_dict}')
-
-# (pbest-xi)
-#My_Mayfly_pbest_minus_xi = position_minus_position(My_Mayfly_pbest_velocity,My_Mayfly_xi_velocity)
-# (gbest-xi)
-#My_Mayfly_gbest_minus_xi = position_minus_position(My_Mayfly_gbest_velocity,My_Mayfly_xi_velocity)
-
-# c1r1(pbest-xi)
-#My_Mayfly_pbest_minus_xi_with_c1r1 = coef_times_position(2,My_Mayfly_pbest_minus_xi)
-# c1r1(gbest-xi)
-#My_Mayfly_gbest_minus_xi_with_c2r2 = coef_times_position(2,My_Mayfly_gbest_minus_xi)
-
-# c1r1(pbest-xi) + c2r2(gbest-xi)
-#My_Mayfly_New_velocity = add_velocity(My_Mayfly_pbest_minus_xi_with_c1r1,My_Mayfly_gbest_minus_xi_with_c2r2)
-#print(f'My_Mayfly_New_velocity is {My_Mayfly_New_velocity}')
-
-#New_velocity_for_Vit = add_velocity(My_Mayfly_xi_coef_time_velocity_dict,My_Mayfly_New_velocity)
-#print(f'New_velocity_for_Vit is {New_velocity_for_Vit}')
-
-
-# #Picker = []
-# Tardiness = []
-# Batch = []
-#
-# for sol in range(num_sol):
-#     a, b, c = evaluate_all_sols(cur_sol[sol], df_item_pool, name_path_input)
-#     #Picker.append(a)
-#     Tardiness.append(b)
-#     Batch.append(c)
-#
-# #print(f'Picker is {Picker}')
-# print(f'Tardiness is {Tardiness}')
-# print(f'Batch is {Batch}')
 
 name_path_input = '1I-10-100-2'
 df_item_pool = read_input(name_path_input)
 
-def mayfly(name_path_input,num_gen,pop_size,*parameters):
+#input หลังจาก evaluate_all_sols แล้ว
+#input item_in_batch_all_sols =  [[[5, 4, 2, 9, 3, 8], [0, 7, 6, 1]], [[5, 4, 7, 6, 1, 9, 3, 8], [0, 2]], [[5, 4, 7, 6, 1, 9, 3, 8], [0, 2]], [[0, 2, 9, 3, 8], [5, 4, 7, 6, 1]], [[0, 5, 4, 6, 1, 9, 3, 8], [2], [7]]]
+#input total_tardiness_all_sols = [0.25, 13.617, 13.617, 0, 11.817]
+#input picker_assigment_all_sols = [[[1], [2]], [[1], [2]], [[1], [2]], [[2], [1]], [[1, 2], [3]]]
+def mayfly(name_path_input, num_gen, pop_size, *parameters):
     import random
-    a1,a2,beta,gravity = parameters
-    df_item_pool,df_item_sas_random = read_input(name_path_input)
+    # แยกตัวแปร parameters เป็นตัวแปรย่อยๆ
+    a1, a2, beta, gravity = parameters
+
+    # อ่านข้อมูลจากไฟล์ที่กำหนดและนับจำนวนสิ่งของ (items)
+    df_item_pool, df_item_sas_random = read_input(name_path_input)
     num_item = df_item_pool.shape[0]
-    male_mayfly_cur_pos =[]
-    # สร้างคำตอบเริ่มต้นของ Mayfly
-    for sol in range(pop_size):
-        temp_pos =list(range(num_item))
-        random.shuffle(temp_pos)
-        male_mayfly_cur_pos.append(temp_pos)
+
+    # สร้างประชากรแมลงผาย (mayfly) และตั้งค่าเริ่มต้น
+    # mayfly_cur_pos: ตำแหน่งปัจจุบันของแมลงผายในประชากร
+    # pbest_sols, pbest_tardiness: บันทึกคำตอบและค่าความล่าช้าที่ดีที่สุดในประชากร
+    # g_best_tardiness, g_best_items_in_batch: บันทึกค่าความล่าช้าและสิ่งของที่ดีที่สุดในประชากรทั้งหมด
+    mayfly_cur_pos = [random.sample(range(num_item), num_item) for _ in range(pop_size)]
+    pbest_sols = [[] for _ in range(pop_size)]
+    pbest_tardiness = [float('inf')] * pop_size
+    g_best_tardiness = float('inf')
+    g_best_items_in_batch = []
+
+    # ประเมินคำตอบเริ่มต้นและหา gbest (คำตอบที่ดีที่สุดในประชากร)
+    # ทำการวนลูปเพื่อประเมินแต่ละคำตอบของประชากร
     picker_assigment_all_sols = []
     total_tardiness_all_sols = []
     item_in_batch_all_sols = []
-        # หาค่าคำตอบของ male mayfly แต่ละตัวใน population
-    for sol in range(pop_size):
-        picker_assigment_sol,total_tardiness_sol,item_in_batch_sol = evaluate_all_sols(male_mayfly_cur_pos[sol], df_item_pool, name_path_input)
+    for i, sol in enumerate(mayfly_cur_pos):
+        picker_assigment_sol, total_tardiness_sol, item_in_batch_sol = evaluate_all_sols(sol, df_item_pool,
+                                                                                         name_path_input)
         picker_assigment_all_sols.append(picker_assigment_sol)
         total_tardiness_all_sols.append(total_tardiness_sol)
         item_in_batch_all_sols.append(item_in_batch_sol)
-    #สร้าง list ของคำตอบใหม่หลังจากซ่อมคำตอบใน evaluate_all_sols ไปแล้ว
-    male_mayfly_cur_pos = [[] for sol in range(pop_size)]
-    for sol in range(pop_size):
-        for batch in item_in_batch_all_sols[sol]:
-            male_mayfly_cur_pos[sol].extend(batch)
-    g_best_index = total_tardiness_all_sols.index(min(total_tardiness_all_sols))
-    g_best_index =male_mayfly_cur_pos[g_best_index]
-    g_best_tardiness = min(total_tardiness_all_sols)
+
+        if total_tardiness_sol < pbest_tardiness[i]:
+            pbest_sols[i] = item_in_batch_sol
+            pbest_tardiness[i] = total_tardiness_sol
+
+    min_tardiness = min(total_tardiness_all_sols)
+    if min_tardiness <= g_best_tardiness:
+        if min_tardiness < g_best_tardiness:
+            g_best_items_in_batch.clear()
+            g_best_tardiness = min_tardiness
+        for i, tardiness in enumerate(total_tardiness_all_sols):
+            if tardiness == g_best_tardiness:
+                extended_batch = []
+                for batch in item_in_batch_all_sols[i]:
+                    extended_batch.extend(batch)
+                g_best_items_in_batch.append(extended_batch)
+
+    # สร้าง extended_item_in_batch_all_sols
+    # สร้างรายการใหม่โดยขยายข้อมูลจากรายการ item_in_batch_all_sols
+    extended_item_in_batch_all_sols = []
+    for sol in item_in_batch_all_sols:
+        extended_sol = []
+        for batch in sol:
+            extended_sol.extend(batch)
+        extended_item_in_batch_all_sols.append(extended_sol)
+
+    # สร้างประชากรแมลงผายตัวผู้และตัวเมีย
+    # กำหนดจำนวนแมลงผายตัวผู้และตัวเมียเท่าๆ กันจากประชากร
+    num_males = num_females = pop_size // 2
+    male_mayfly = []
+    female_mayfly = []
+
+    # สุ่มเลือกตัวผู้และตัวเมียจากรายการที่ขยายแล้ว
+    # โดยสุ่มเลือกตัวอย่างจากรายการ extended_item_in_batch_all_sols
+    for _ in range(num_males):
+        male_mayfly.append(random.choice(extended_item_in_batch_all_sols))
+
+    for _ in range(num_females):
+        female_mayfly.append(random.choice(extended_item_in_batch_all_sols))
+
+
+
+        # วนซ้ำจนกว่าเงื่อนไขหยุดจะถูกพบ
+    # while not stopping_criteria_met():
+        # อัปเดตความเร็วและคำตอบ
+        #xit+1 = xit + vit+1
+    new_mayfly_cur_sol = []
+     # แปลง solution ของตัวผู้และตัวเมียให้เป็น arc
+    male_mayfly_arc = all_sol_from_list_to_arc(male_mayfly)
+    female_mayfly_arc = all_sol_from_list_to_arc(female_mayfly)
+
+    # แบ่ง arc ของตัวผู้และตัวเมียให้เป็น cut_set โดยให้แต่ละ arc ผ่านฟังก์ชัน cut_arc_sol
+    male_mayfly_arc_sol_cut = [cut_arc_sol(arc) for arc in male_mayfly_arc]
+    female_mayfly_arc_sol_cut = [cut_arc_sol(arc) for arc in female_mayfly_arc]
+
+    # สร้างความเร็วของตัวผู้และตัวเมีย
+    male_mayfly_velocity_dict = [init_velocity_sol(arc_sol_cut) for arc_sol_cut in male_mayfly_arc_sol_cut]
+    female_mayfly_velocity_dict = [init_velocity_sol(arc_sol_cut) for arc_sol_cut in female_mayfly_arc_sol_cut]
+
+    # คูณความเร็วของตัวผู้และตัวเมียด้วยค่าคงที่ gravity * vtij
+    male_mayfly_gravity_times_velocity = [coef_times_velocity(gravity, sol) for sol in male_mayfly_velocity_dict]
+    female_mayfly_gravity_times_velocity = [coef_times_velocity(gravity, sol) for sol in female_mayfly_velocity_dict]
+
+    # คูณความเร็วของตัวผู้และตัวเมียด้วยค่าคงที่ a1 * (pbest - xi)
+        # update_velocities(male_mayflies, female_mayflies)
+        # update_positions(male_mayflies, female_mayflies)
+
+        # ประเมินคำตอบใหม่
+        # evaluate_solutions(male_mayflies, female_mayflies)
+
+        # จัดอันดับ mayflies
+        # rank_mayflies(male_mayflies, female_mayflies)
+
+        # ผสมพันธุ์ mayflies
+        # offspring = mate_mayflies(male_mayflies, female_mayflies)
+
+        # ประเมินลูกหลาน
+        # evaluate_offspring(offspring)
+
+        # แยกลูกหลานไปยังตัวผู้และตัวเมีย
+        # separate_offspring(offspring)
+
+        # แทนที่คำตอบที่แย่ที่สุดด้วยคำตอบใหม่ที่ดีที่สุด
+        # replace_worst_solutions(male_mayflies, female_mayflies, offspring)
+
+        # อัปเดต pbest และ gbest
+        # update_pbest_gbest(male_mayflies, female_mayflies)
+
+        # ประมวลผลหลังการทำงานและการแสดงผล
+        # postprocess_and_visualize(male_mayflies, female_mayflies)
+        # pass
     print(xxx)
-mayfly(name_path_input,100,5,2,2,0.5,0.7)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    # # สร้างคำตอบเริ่มต้นของ Mayfly
+    # for sol in range(pop_size):
+    #     temp_pos =list(range(num_item))
+    #     random.shuffle(temp_pos)
+    #     male_mayfly_cur_pos.append(temp_pos)
+    # picker_assigment_all_sols = []
+    # total_tardiness_all_sols = []
+    # item_in_batch_all_sols = []
+    #     # หาค่าคำตอบของ male mayfly แต่ละตัวใน population
+    # for sol in range(pop_size):
+    #     picker_assigment_sol,total_tardiness_sol,item_in_batch_sol = evaluate_all_sols(male_mayfly_cur_pos[sol], df_item_pool, name_path_input)
+    #     picker_assigment_all_sols.append(picker_assigment_sol)
+    #     total_tardiness_all_sols.append(total_tardiness_sol)
+    #     item_in_batch_all_sols.append(item_in_batch_sol)
+    # #สร้าง list ของคำตอบใหม่หลังจากซ่อมคำตอบใน evaluate_all_sols ไปแล้ว
+    # male_mayfly_cur_pos = [[] for sol in range(pop_size)]
+    # for sol in range(pop_size):
+    #     for batch in item_in_batch_all_sols[sol]:
+    #         male_mayfly_cur_pos[sol].extend(batch)
+    # g_best_index = total_tardiness_all_sols.index(min(total_tardiness_all_sols))
+    # g_best_index = male_mayfly_cur_pos[g_best_index]
+    # g_best_tardiness = min(total_tardiness_all_sols)
+
+
+mayfly(name_path_input,2,10,2,2,0.5,0.7)
 

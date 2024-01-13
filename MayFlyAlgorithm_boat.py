@@ -3,31 +3,32 @@ import random
 from evaluate_all_sols  import *
 random.seed(1234)
 
-df_item_sas_random = pd.read_csv('df_item_sas_random.csv')
-name_path_input = '1I-10-100-2'
-df_duedate = pd.read_csv(name_path_input +'\\duedate_'+name_path_input +'.csv', header=None)
-df_item_order = pd.read_csv(name_path_input + '\\input_location_item_'+ name_path_input +'.csv', header=None)
+def read_input(name_path_input):
+    df_item_sas_random = pd.read_csv('df_item_sas_random.csv')
+    name_path_input = '1I-10-100-2'
+    df_duedate = pd.read_csv(name_path_input +'\\duedate_'+name_path_input +'.csv', header=None)
+    df_item_order = pd.read_csv(name_path_input + '\\input_location_item_'+ name_path_input +'.csv', header=None)
 
-list_duedate = df_duedate[0].tolist()
+    list_duedate = df_duedate[0].tolist()
 
-num_order = df_item_order.shape[1]
-list_order = []
-list_total_item = []
-df_item_pool = pd.DataFrame()
+    num_order = df_item_order.shape[0]
+    list_order = []
+    list_total_item = []
+    df_item_pool = pd.DataFrame()
 
-for order in range(num_order):
-    item = df_item_order[order][df_item_order[order] != 0]
-    df_item_in_this_order = df_item_sas_random[df_item_sas_random['location'].isin(item)].copy()
-    df_item_in_this_order['duedate'] = list_duedate[order]
-    df_item_pool = pd.concat([df_item_pool, df_item_in_this_order])
-    num_item_this_order = df_item_in_this_order.shape[0]
-    for i in range(num_item_this_order):
-        list_order.append(order)
-    list_total_item.extend(item.tolist())
+    for order in range(num_order):
+        item = df_item_order[order][df_item_order[order] != 0]
+        df_item_in_this_order = df_item_sas_random[df_item_sas_random['location'].isin(item)].copy()
+        df_item_in_this_order['duedate'] = list_duedate[order]
+        df_item_pool = pd.concat([df_item_pool, df_item_in_this_order])
+        num_item_this_order = df_item_in_this_order.shape[0]
+        for i in range(num_item_this_order):
+            list_order.append(order)
+            list_total_item.extend(item.tolist())
 
-df_item_pool['order'] = list_order
-df_item_pool.reset_index(drop=True, inplace=True)
-
+            df_item_pool['order'] = list_order
+            df_item_pool.reset_index(drop=True, inplace=True)
+    return df_item_pool,df_item_sas_random
 # ------------------------------------------------------------------------------------------------------------------------
 #Mayfly Algorithm
 # Function Initialize the male mayfly population xi
@@ -145,19 +146,38 @@ def coef_time_position_MrGumNhud(c_value, arc_diff):
     return coef_time_position_dict
 
 
-def add_velocity(velocity_fiest, velocity_second):
-    num_item = len(velocity_fiest)
-    added_velocity_dict = [{} for item in range(num_item)]
-    for item in range(num_item):
-        for arc in velocity_fiest[item]:
-            added_velocity_dict[item][arc] = velocity_fiest[item][arc]
-        for arc in velocity_second[item]:
-            if arc in added_velocity_dict[item].keys():
-                if velocity_second[item][arc] > added_velocity_dict[item][arc]:
-                    added_velocity_dict[item][arc] = velocity_second[item][arc]
-            else:
-                added_velocity_dict[item][arc] = velocity_second[item][arc]
-    return added_velocity_dict
+def add_velocity(velocity_first, velocity_second):
+    # Check if both inputs are lists
+    if not (isinstance(velocity_first, list) and isinstance(velocity_second, list)):
+        raise TypeError("Both arguments must be lists of dictionaries")
+
+    # Initialize the result list
+    added_velocity_list = []
+
+    # Iterate over the lists
+    for i in range(max(len(velocity_first), len(velocity_second))):
+        # Initialize an empty dictionary for this iteration
+        merged_dict = {}
+
+        # Merge from the first list
+        if i < len(velocity_first) and isinstance(velocity_first[i], dict):
+            merged_dict.update(velocity_first[i])
+
+        # Merge from the second list
+        if i < len(velocity_second) and isinstance(velocity_second[i], dict):
+            for key, value in velocity_second[i].items():
+                # Logic for merging values from the second dictionary
+                # For example, choosing the maximum value
+                if key in merged_dict:
+                    merged_dict[key] = max(merged_dict[key], value)
+                else:
+                    merged_dict[key] = value
+
+        # Add the merged dictionary to the result list
+        added_velocity_list.append(merged_dict)
+
+    return added_velocity_list
+
 
 
 def check_velocity_inconsistency(added_velocity_dict):
@@ -266,40 +286,72 @@ def gbest_minus_position(arc_gbest,arc_sol):
     return gbest_minus_xi
 
 
+
+def prepare_mayfly_solutions(tardiness_from_male_mayfly, tardiness_from_female_mayfly,
+                             batch_list_from_male_mayfly, batch_list_from_female_mayfly):
+    cur_sol_mayfly_gbest, cur_sol_male_mayfly, cur_sol_female_mayfly, pbest_male, pbest_female = process_mayfly_data(tardiness_from_male_mayfly, tardiness_from_female_mayfly,batch_list_from_male_mayfly, batch_list_from_female_mayfly )
+    arc_gbest_mayfly = sol_to_arc_for_gbest(cur_sol_mayfly_gbest)
+    arc_sol_male_mayfly, arc_sol_female_mayfly, arc_pbest_male_mayfly, arc_pbest_female_mayfly = all_sols_from_list_to_arc(cur_sol_male_mayfly, cur_sol_female_mayfly, pbest_male, pbest_female)
+    cut_arc_sol_male_mayfly, cut_arc_sol_female_mayfly = cut_all_arc_sols(arc_sol_male_mayfly, arc_sol_female_mayfly)
+    arc_sol_male_mayfly_velocity_dict, arc_sol_female_mayfly_velocity_dict = init_all_velocity_sols(cut_arc_sol_male_mayfly, cut_arc_sol_female_mayfly)
+
+    return arc_sol_male_mayfly_velocity_dict, arc_sol_female_mayfly_velocity_dict, arc_pbest_male_mayfly, arc_pbest_female_mayfly, arc_sol_male_mayfly, arc_sol_female_mayfly,arc_gbest_mayfly
+
+
+def update_velocity_male_mayfly(coef,c_value,arc_sol_male_mayfly_velocity_dict, arc_pbest_male_mayfly, arc_sol_male_mayfly, arc_gbest_mayfly):
+    coef_time_male_mayfly_volocity = coef_time_volocity(coef, arc_sol_male_mayfly_velocity_dict)
+
+    male_mayfly_pbest_minus_xi = position_minus_position(arc_pbest_male_mayfly, arc_sol_male_mayfly)
+    male_mayfly_gbest_minus_xi = gbest_minus_position(arc_gbest_mayfly, arc_sol_male_mayfly)
+
+    added_coef_to_male_mayfly_form_pbest_diff = coef_time_position_MrGumNhud(c_value, male_mayfly_pbest_minus_xi)
+    added_coef_to_male_mayfly_form_gbest_diff = coef_time_position_MrGumNhud(c_value, male_mayfly_gbest_minus_xi)
+
+    added_diff_form_pbest_and_gbest_malemayfly = add_velocity(added_coef_to_male_mayfly_form_pbest_diff, added_coef_to_male_mayfly_form_gbest_diff)
+
+    new_male_mayfly_velocity = add_velocity(coef_time_male_mayfly_volocity, added_diff_form_pbest_and_gbest_malemayfly)
+
+    return new_male_mayfly_velocity,coef_time_male_mayfly_volocity,added_diff_form_pbest_and_gbest_malemayfly
+
+
 print('---------'*17)
 
-num_item = df_item_pool.shape[0]
-num_sol = 5
+# num_item = df_item_pool.shape[0]
+num_sol = 3
+name_path_input = '1I-10-100-2'
+df_item_pool = read_input(name_path_input)
+print(df_item_pool)
 
-#initialize the mayfly population
-male_mayfly_population = initialize_mayfly_population(num_sol,num_item)
-female_mayfly_population = initialize_mayfly_population(num_sol,num_item)
-
-#evaluate the male and female mayfly population
-picker_list_from_male_mayfly, tardiness_from_male_mayfly, batch_list_from_male_mayfly = evaluate_mayfly_population(num_sol, male_mayfly_population, df_item_pool, name_path_input)
-picker_list_from_female_mayfly, tardiness_from_female_mayfly, batch_list_from_female_mayfly = evaluate_mayfly_population(num_sol, female_mayfly_population, df_item_pool, name_path_input)
-
-#เตรียมข้อมูลสำหรับการปรับปรุง
-cur_sol_mayfly_gbest, cur_sol_male_mayfly, cur_sol_female_mayfly, pbest_male, pbest_female = process_mayfly_data(tardiness_from_male_mayfly, tardiness_from_female_mayfly, batch_list_from_male_mayfly, batch_list_from_female_mayfly)
-arc_gbest_mayfly = sol_to_arc_for_gbest(cur_sol_mayfly_gbest)
-arc_sol_male_mayfly, arc_sol_female_mayfly, arc_pbest_male_mayfly, arc_pbest_female_mayfly = all_sols_from_list_to_arc(cur_sol_male_mayfly, cur_sol_female_mayfly, pbest_male, pbest_female)
-cut_arc_sol_male_mayfly, cut_arc_sol_female_mayfly = cut_all_arc_sols(arc_sol_male_mayfly, arc_sol_female_mayfly)
-arc_sol_male_mayfly_velocity_dict, arc_sol_female_mayfly_velocity_dict = init_all_velocity_sols(cut_arc_sol_male_mayfly, cut_arc_sol_female_mayfly)
-
-#male mayfly
-coef_time_male_mayfly_volocity = coef_time_volocity(0.5,arc_sol_male_mayfly_velocity_dict)
-male_mayfly_pbest_minus_xi = position_minus_position(arc_pbest_male_mayfly,arc_sol_male_mayfly)
-male_mayfly_gbest_minus_xi = gbest_minus_position(arc_gbest_mayfly,arc_sol_male_mayfly)
-added_coef_to_male_mayfly_form_pbest_diff = coef_time_position_MrGumNhud(0.7,male_mayfly_pbest_minus_xi)
-added_coef_to_male_mayfly_form_gbest_diff = coef_time_position_MrGumNhud(0.7,male_mayfly_gbest_minus_xi)
-added_diff_form_pbest_and_gbest_malemayfly = add_velocity(added_coef_to_male_mayfly_form_pbest_diff,added_coef_to_male_mayfly_form_gbest_diff)
-new_male_mayfly_velocity = add_velocity(coef_time_male_mayfly_volocity,added_diff_form_pbest_and_gbest_malemayfly)
-
-print(f'coef_time_male_mayfly_volocity = {coef_time_male_mayfly_volocity}')
-print(f'added_diff_form_pbest_and_gbest_malemayfly {added_diff_form_pbest_and_gbest_malemayfly}')
-
-#female mayfly
-coef_time_female_mayfly_volocity = coef_time_volocity(0.5,arc_sol_female_mayfly_velocity_dict)
+# #initialize the mayfly population
+# male_mayfly_population = initialize_mayfly_population(num_sol,num_item)
+# female_mayfly_population = initialize_mayfly_population(num_sol,num_item)
+#
+# #evaluate the male and female mayfly population
+# picker_list_from_male_mayfly, tardiness_from_male_mayfly, batch_list_from_male_mayfly = evaluate_mayfly_population(num_sol, male_mayfly_population, df_item_pool, name_path_input)
+# picker_list_from_female_mayfly, tardiness_from_female_mayfly, batch_list_from_female_mayfly = evaluate_mayfly_population(num_sol, female_mayfly_population, df_item_pool, name_path_input)
+#
+# #เตรียมข้อมูลสำหรับการปรับปรุง
+# arc_sol_male_mayfly_velocity_dict, arc_sol_female_mayfly_velocity_dict, arc_pbest_male_mayfly, arc_pbest_female_mayfly, arc_sol_male_mayfly, arc_sol_female_mayfly,arc_gbest_mayfly= prepare_mayfly_solutions(tardiness_from_male_mayfly, tardiness_from_female_mayfly, batch_list_from_male_mayfly, batch_list_from_female_mayfly)
+#
+# # #male mayfly
+# # coef_time_male_mayfly_volocity = coef_time_volocity(0.5,arc_sol_male_mayfly_velocity_dict)
+# # male_mayfly_pbest_minus_xi = position_minus_position(arc_pbest_male_mayfly,arc_sol_male_mayfly)
+# # male_mayfly_gbest_minus_xi = gbest_minus_position(arc_gbest_mayfly,arc_sol_male_mayfly)
+# # added_coef_to_male_mayfly_form_pbest_diff = coef_time_position_MrGumNhud(0.7,male_mayfly_pbest_minus_xi)
+# # added_coef_to_male_mayfly_form_gbest_diff = coef_time_position_MrGumNhud(0.7,male_mayfly_gbest_minus_xi)
+# # added_diff_form_pbest_and_gbest_malemayfly = add_velocity(added_coef_to_male_mayfly_form_pbest_diff,added_coef_to_male_mayfly_form_gbest_diff)
+# # # new_male_mayfly_velocity = add_velocity(coef_time_male_mayfly_volocity,added_diff_form_pbest_and_gbest_malemayfly)
+#
+# new_male_mayfly_velocity,coef_time_male_mayfly_volocity,added_diff_form_pbest_and_gbest_malemayfly = update_velocity_male_mayfly(0.5,0.7,arc_sol_male_mayfly_velocity_dict,arc_pbest_male_mayfly,arc_sol_male_mayfly,arc_gbest_mayfly)
+#
+#
+#
+# print(f'coef_time_male_mayfly_volocity = {coef_time_male_mayfly_volocity}')
+# # print(f'added_diff_form_pbest_and_gbest_malemayfly = {added_diff_form_pbest_and_gbest_malemayfly}')
+# # print(f'new_male_mayfly_velocity = {new_male_mayfly_velocity}')
+# #
+# # #female mayfly
+# # coef_time_female_mayfly_volocity = coef_time_volocity(0.5,arc_sol_female_mayfly_velocity_dict)
 
 
 
