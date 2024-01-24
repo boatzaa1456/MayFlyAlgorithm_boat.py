@@ -2,7 +2,7 @@ import numpy as np
 from evaluate_all_sols import *
 from  Mayfly_all_function import *
 np.random.seed(1234)
-
+import itertools
 def mayfly(name_path_input, num_gen, pop_size, *parameters):
     # นำเข้าข้อมูล
     a1, a2, beta, gravity = parameters
@@ -12,6 +12,8 @@ def mayfly(name_path_input, num_gen, pop_size, *parameters):
 # ฟังก์ชันเป้าประสงค์ f(x) เพื่อลดความล่าช้ารวม
     # สร้างประชากร mayfly ตัวผู้และตัวเมีย
     half_pop_size = int(pop_size) // 2
+    E_all = list(itertools.permutations(range(num_item), 2))
+    sub_E_list = [[arc for arc in E_all if arc[0] == item or arc[1] == item] for item in range(num_item)]
     male_mayfly_population = np.tile(np.arange(num_item), (half_pop_size, 1))
     female_mayfly_population = np.tile(np.arange(num_item), (half_pop_size, 1))
 
@@ -23,14 +25,13 @@ def mayfly(name_path_input, num_gen, pop_size, *parameters):
         np.random.shuffle(male)  # สลับลำดับ
         male_evaluations.append(evaluate_all_sols(male, df_item_pool, name_path_input))
 
-
     # สร้าง pbest และความเร็วเริ่มต้นสำหรับ mayfly ตัวผู้
     male_mayfly_cur_sols = [sum(evaluation[2], []) for evaluation in male_evaluations]
     male_arc_sols = all_sol_from_list_to_arc(male_mayfly_cur_sols)
     male_arc_sols_cut = [cut_arc_sol(arc) for arc in male_arc_sols]
     male_velocity_dict = [init_velocity_sol(arc_sol_cut) for arc_sol_cut in male_arc_sols_cut]
-    male_pbest_arc_sol_cut = male_arc_sols_cut.copy()
-
+    male_pbest_cur_sols = male_mayfly_cur_sols.copy()
+    male_pbest_arc_sol_cut = all_sol_from_list_to_arc(male_pbest_cur_sols)
 
     # ---------------------- ส่วนของ Mayfly ตัวเมีย ---------------------- #
     # ประเมินค่าเริ่มต้นสำหรับ mayfly ตัวเมีย
@@ -44,7 +45,7 @@ def mayfly(name_path_input, num_gen, pop_size, *parameters):
     female_arc_sols = all_sol_from_list_to_arc(female_mayfly_cur_sols)
     female_arc_sols_cut = [cut_arc_sol(arc) for arc in female_arc_sols]
     female_velocity_dict = [init_velocity_sol(arc_sol_cut) for arc_sol_cut in female_arc_sols_cut]
-
+    female_pbest_cur_sols = female_mayfly_cur_sols.copy()
 
     # ---------------------- ส่วนของ Global Best (gbest) ---------------------- #
     # หาค่า global best เริ่มต้น
@@ -56,7 +57,7 @@ def mayfly(name_path_input, num_gen, pop_size, *parameters):
     gbest_solutions = [sum(solution_pair, []) for solution_pair in gbest_solutions]
     gbest_init_arc_sols = all_sol_from_list_to_arc(gbest_solutions)
     gbest_init_arc_sols_replicated = [gbest_init_arc_sols[0] for _ in range(half_pop_size)]
-
+    gbest_mayfly_cur_sols = gbest_solutions[0]
 
     # ทำซ้ำ gbest arc solutions เพื่อเปรียบเทียบใน mayfly ตัวผู้
     gbest_init_arc_sols_replicated_cut = [cut_arc_sol(arc) for arc in gbest_init_arc_sols_replicated]
@@ -71,6 +72,14 @@ def mayfly(name_path_input, num_gen, pop_size, *parameters):
         male_velocity_check_incon = [check_velocity_inconsistency(male_new_velocity[sol] ) for sol in range(half_pop_size)]
         male_cut_set = [creat_cut_set(male_velocity_check_incon[sol],0.5) for sol in range(half_pop_size)]
 
+        male_new_cur_pos = []
+        male_new_arc_cur_pos = []
+        for sol in range(half_pop_size):
+            male_new_list, male_arc_new_list = sol_position_update(male_cut_set[sol],male_arc_sols_cut[sol],sub_E_list,male_mayfly_cur_sols[sol][0],male_pbest_cur_sols[sol][0],gbest_mayfly_cur_sols[0])
+            male_new_cur_pos.append(male_new_list)
+            male_new_arc_cur_pos.append(male_arc_new_list)
+
+
         # ---------------------- ส่วนการอัปเดตความเร็วและตำแหน่งของ Mayfly ตัวเมีย ---------------------- #
         female_coef_times_velocity = [coef_times_velocity(gravity, female_velocity_dict[sol]) for sol in range(half_pop_size)]
         female_coef_times_male_diff = [coef_times_position(a2, position_minus_position(male_arc_sols_cut[sol], female_arc_sols_cut[sol])) for sol in range(half_pop_size)]
@@ -78,27 +87,67 @@ def mayfly(name_path_input, num_gen, pop_size, *parameters):
         female_velocity_check_incon = [check_velocity_inconsistency(female_new_velocity[sol]) for sol in range(half_pop_size)]
         female_cut_set = [creat_cut_set(female_velocity_check_incon[sol],0.5) for sol in range(half_pop_size)]
 
-        print(xxx)
+        female_new_cur_pos = []
+        female_new_arc_cur_pos = []
+        for sol in range(half_pop_size):
+            female_new_list, female_arc_new_list = sol_position_update(female_cut_set[sol],female_arc_sols_cut[sol],sub_E_list,female_mayfly_cur_sols[sol][0],female_pbest_cur_sols[sol][0],gbest_mayfly_cur_sols[0])
+            female_new_cur_pos.append(female_new_list)
+            female_new_arc_cur_pos.append(female_arc_new_list)
+
+
 
         # Evaluate solutions
+        # ---------------------- ส่วนการประเมินผลของ Mayfly ตัวผู้ ---------------------- #
+        male_evaluations_new_cor_pos = [evaluate_all_sols(male_new_cur_pos[sol], df_item_pool, name_path_input) for sol in range(half_pop_size)]
+
+        # ---------------------- ส่วนการประเมินผลของ Mayfly ตัวผู้ ---------------------- #
+        female_evaluations_new_cor_pos = [evaluate_all_sols(female_new_cur_pos[sol], df_item_pool, name_path_input) for sol in range(half_pop_size)]
 
         # Rank the mayflies
+        # ---------------------- ส่วนการจัดอันดับ Mayfly ตัวผู้ ---------------------- #
+        ranked_male_mayfly = sorted(male_evaluations_new_cor_pos.copy(), key=lambda x: x[1])
+        ranked_male_mayfly_new_cur_sols = [sum(evaluation[2], []) for evaluation in ranked_male_mayfly]
+        # ---------------------- ส่วนการจัดอันดับ Mayfly ตัวเมีย ---------------------- #
+        ranked_female_mayfly = sorted(female_evaluations_new_cor_pos.copy(), key=lambda x: x[1])
+        ranked_female_mayfly_new_cur_sols = [sum(evaluation[2], []) for evaluation in ranked_female_mayfly]
 
         # Mate the mayflies
+        mate_the_mayflies = [cxPartialyMatched(ranked_male_mayfly_new_cur_sols[sol],ranked_female_mayfly_new_cur_sols[sol]) for sol in range(half_pop_size)]
+        offspring_1 = [mate_the_mayflies[sol][0] for sol in range(half_pop_size)]
+        offspring_2 = [mate_the_mayflies[sol][1] for sol in range(half_pop_size)]
+
+        # รวม offspring_1 และ offspring_2
+        offspring = offspring_1 + offspring_2
 
         # Evaluate offspring
+        offspring_evaluations = []
+        for off in offspring:
+            offspring_evaluations.append(evaluate_all_sols(off, df_item_pool, name_path_input))
 
         # Separate offspring to male and female randomly
+        random.shuffle(offspring_evaluations)
+        Separate_off_pop = len(offspring_evaluations) // 2
+        separate_offspring_male = offspring_evaluations[:Separate_off_pop ]
+        separate_offspring_female = offspring_evaluations[Separate_off_pop:]
 
         # Replace the worst solutions with the best new ones
+        new_male_sols_from_replace_worst_sol_with_best_sol = compare_and_replace(ranked_male_mayfly,separate_offspring_male)
+        new_female_sols_from_replace_worst_sol_with_best_sol = compare_and_replace(ranked_female_mayfly,separate_offspring_female)
 
         # Update pbest and gbest
-
+        combined_evaluations_new_sols = new_male_sols_from_replace_worst_sol_with_best_sol + new_female_sols_from_replace_worst_sol_with_best_sol
+        combined_news_tardiness = [eval_[1] for eval_ in combined_evaluations_new_sols]
+        gbest_total_news_tardiness = min(combined_news_tardiness)
+        gbest_indices = [indices for indices, tardiness in enumerate(combined_news_tardiness) if tardiness == gbest_total_news_tardiness]
+        gbest_news_solutions = [combined_evaluations_new_sols[indices][2] for indices in gbest_indices]
+        gbest_news_solutions = [sum(solution_pair, []) for solution_pair in gbest_news_solutions]
+        gbest_mayfly_new_cur_sols = gbest_solutions[0]
     # Return the final best solution(s)
+        print("test")
 
 name_path_input = '1I-10-100-2'
 df_item_pool = read_input(name_path_input)
-mayfly(name_path_input, 1, 100, 1, 1, 0.5, 0.7)
+mayfly(name_path_input, 1, 10, 1, 1, 0.5, 0.7)
 
 
 
