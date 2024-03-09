@@ -1,5 +1,5 @@
 import numpy as np
-from evaluate_all_sols import *
+from evaluate_all_sols_old import *
 from  Mayfly_all_function import *
 np.random.seed(1234)
 import itertools

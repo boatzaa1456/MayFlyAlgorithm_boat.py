@@ -2,21 +2,21 @@ import pandas as pd
 import time
 
 value_item_heavy = 100
+value_heavy = 40
 
-#
+
 def batching_A(df_item_poor, list_index_item, *info):
-
     # จับเวลาการทำงานของกระบวนการ
     start_time = time.time()
 
     capacity_picker, value_threshold, name_path_input = info
 
     list_batching_item = []
-    list_total_weight_batch = [] # น้ำหนักทั้งหมด พิจารณาสินค้าปัจุบัน
-    num_item = len(df_item_poor) #นับจำนวนสินค้าทั้งหมด
+    list_total_weight_batch = []  # น้ำหนักทั้งหมด พิจารณาสินค้าปัจุบัน
+    num_item = len(df_item_poor)  # นับจำนวนสินค้าทั้งหมด
 
-    count_batch = 1 # กำหนดหมายเลข Batch
-    df_item_record = pd.DataFrame() #สร้าง Data Frame ไว้บันทึกข้อมูลทั้งหมด
+    count_batch = 1  # กำหนดหมายเลข Batch
+    df_item_record = pd.DataFrame()  # สร้าง Data Frame ไว้บันทึกข้อมูลทั้งหมด
     list_item_in_batch = []
     dataframe_new = []
     while len(list_index_item) != 0:
@@ -24,7 +24,7 @@ def batching_A(df_item_poor, list_index_item, *info):
         list_item_new = []
 
         df_item = pd.DataFrame()
-#
+        #
         for i in range(0, num_item):
             if i >= len(list_index_item):
                 break
@@ -96,7 +96,7 @@ def batching_A(df_item_poor, list_index_item, *info):
             list_item.append(location)
 
         list_batching_item.append(list_item)
-        df_item_record = pd.concat([df_item_record, df_item], ignore_index = True)
+        df_item_record = pd.concat([df_item_record, df_item], ignore_index=True)
         num_columns = len(df_item_record.columns)
         list_zero = [0 for x in range(0, num_columns)]
         df_item_record.loc[len(df_item_record.index)] = list_zero
@@ -128,25 +128,32 @@ def batching_A(df_item_poor, list_index_item, *info):
     end_time = time.time()
     total_time_run = end_time - start_time
     total_time_run = format(total_time_run, '.3f')
-    #print('total time run :', total_time_run, 'seconds')
+    # print('total time run :', total_time_run, 'seconds')
 
     return list_batching_item, df_item_record, list_item_in_batch
 
-def batching_2(df_item_poor, list_index_item, *info):
 
-    '''Input : list_index_item = [3, 5, 7, 1, 9, 8, 6, 2, 0, 4]'''
+def batching_B(df_item_poor, list_index_item, *info):
+    '''Input : list_index_item = [3, 5, 7, 1, 9, 8, 6, 2, 0, 4]
+             :   df_item_poor =
+               index    location  item     category  weight    self_capacity     duedate     order
+                52       731        314         1       5             19          10.5417     19
+            '''
 
-    ''' จับเวลาการทำงานของกระบวนการ '''
-    start_time = time.time()
-
-
+    ''' ข้อมูลภายนอก '''
+    # ความสามารถในการหยิบสินค้าของพนักงาน (capacity_picker)
+    # ความสามารถในการรับสินค้าหนักของอุปกรณ์หยิบสินค้า (value_threshold)
+    # ชื่อไฟล์โจทย์ในการทดลอง (name_path_input)
     capacity_picker, value_threshold, name_path_input = info
-    ''' ค่ากำหนดสินค้าว่าป็นสินค้าหนักหรือสินค้าเบา (Item ที่มีน้ำหนักมากกว่า 40 เป็นสินค้าหนัก)  '''
 
-    df_item_record = pd.DataFrame()
-    list_batching_item, list_item_in_batch = [], []
+    ''' ค่ากำหนดสินค้าว่าป็นสินค้าหนักหรือสินค้าเบา (Item ที่มีน้ำหนักมากกว่า 40 เป็นสินค้าหนัก) 
+    (value_heavy = 40)  '''
+
+    df_item_record = pd.DataFrame()  # สร้างตัวแปร Dateframe
     num_item = len(df_item_poor)  # นับจำนวนสินค้าทั้งหมด
 
+    list_batching_item, list_item_in_batch = [], []
+    # พิจารณาที่ละ item
     for i in range(num_item):
         '''Index สินค้าที่ถูกพิจารณาปัจจุบัน '''
         item_current = list_index_item[i]
@@ -168,6 +175,7 @@ def batching_2(df_item_poor, list_index_item, *info):
             list_weight_each_batch, list_batch_remain = [], []
 
             for j in range(1, int(count_batch) + 1):
+
                 conditions = 0
                 '''ตรวจสอบ น้ำหนัก Item รวมของแต่ละ Batch '''
                 weight_each_batch = df_item_record.loc[df_item_record['batch'] == j, 'weight'].sum()
@@ -175,7 +183,7 @@ def batching_2(df_item_poor, list_index_item, *info):
 
                 ''' ใส่ Item ลงไปใน  Batch น้ำหนัก มากเกิน ความสามารถในการหยิบของพนักงานหรือไหม'''
                 if weight_each_batch > capacity_picker:
-                    df_item_record.loc[item_current, 'batch'] = j+1
+                    df_item_record.loc[item_current, 'batch'] = j + 1
                     ''' ละเมิดเงื่อนไข '''
                     conditions += 1
                     continue
@@ -185,7 +193,8 @@ def batching_2(df_item_poor, list_index_item, *info):
                 if weight_item_current >= value_item_heavy:
                     ''' รวมน้ำหนักของสินค้าหนักใน batch '''
                     df_item_batch_current = df_item_record.loc[df_item_record['batch'] == j]
-                    weight_item_heavy = df_item_batch_current.loc[df_item_batch_current['category'] == 0, 'weight'].sum()
+                    weight_item_heavy = df_item_batch_current.loc[
+                        df_item_batch_current['weight'] >= value_heavy, 'weight'].sum()
                     if weight_item_heavy > value_threshold:
                         df_item_record.loc[item_current, 'batch'] = j + 1
                         ''' ละเมิดเงื่อนไข '''
@@ -229,21 +238,12 @@ def batching_2(df_item_poor, list_index_item, *info):
             if conditions == 0:
                 break
 
-    df_item_record = df_item_record.sort_values(by=['batch', 'category', 'self_capacity'], ascending=[True, False, True])
-
-    # name_file = 'Dataframe_solution_' + str(num_population)
-    # path_1 = name_path_input + '\\' + name_file + '.csv'
-    # df_item_record.to_csv(path_1, index=False)
-    # pd.set_option('display.max_row', None)
-
-    end_time = time.time()
-    total_time_run = end_time - start_time
-    total_time_run = format(total_time_run, '.3f')
-    #print(f'total_time_run = {total_time_run}')
+    df_item_record = df_item_record.sort_values(by=['batch', 'category', 'self_capacity'],
+                                                ascending=[True, False, True])
 
     '''แปลงข้อมูลใน Data frame ลง list'''
     num_batch = df_item_record['batch'].iloc[-1]
-    for run in range(1, int(num_batch)+1):
+    for run in range(1, int(num_batch) + 1):
         marks_list = df_item_record[df_item_record['batch'] == run]
         list_batching_item.append(marks_list['location'].values.tolist())
         list_item_in_batch.append(marks_list.index.tolist())
@@ -253,6 +253,274 @@ def batching_2(df_item_poor, list_index_item, *info):
     list_item_in_batch = [[8, 3, 9, 1, 6, 7, 4, 5], [2, 0]]'''
     return list_batching_item, df_item_record, list_item_in_batch
 
-def end ():
 
+def bisect_left_desc(a, x, lo=0, hi=None):
+    if hi is None: hi = len(a)
+    while lo < hi:
+        mid = (lo + hi) // 2
+        if a[mid] > x:
+            lo = mid + 1
+        else:
+            hi = mid
+    return lo
+
+
+def bisect_right_desc(a, x, lo=0, hi=None):
+    if hi is None: hi = len(a)
+    while lo < hi:
+        mid = (lo + hi) // 2
+        if a[mid] >= x:
+            lo = mid + 1
+        else:
+            hi = mid
+    return lo
+def join_lists_concatenation(lists):
+    new_list = []
+    for list in lists:
+        new_list+= list
+    return new_list
+
+def batching_open(df_item_pool, list_index_item, *info):  # อย่าลืมใส่ heavy_item_set ตอนเรียกใช้
+
+    '''Input : list_index_item = [3, 5, 7, 1, 9, 8, 6, 2, 0, 4]
+             :   df_item_poor =
+               index    location  item     category  weight    self_capacity     duedate     order
+                52       731        314         1       5             19          10.5417     19
+            '''
+    ''' ข้อมูลภายนอก '''
+    # ความสามารถในการหยิบสินค้าของพนักงาน (capacity_picker)
+    # ความสามารถในการรับสินค้าหนักของอุปกรณ์หยิบสินค้า (value_threshold)
+    # ชื่อไฟล์โจทย์ในการทดลอง (name_path_input)
+    capacity_picker, value_threshold, heavy_item_set, name_path_input = info
+
+    ''' ค่ากำหนดสินค้าว่าป็นสินค้าหนักหรือสินค้าเบา (Item ที่มีน้ำหนักมากกว่า 40 เป็นสินค้าหนัก) 
+    (value_heavy = 40)  '''
+
+    df_item_record = pd.DataFrame()  # สร้างตัวแปร Dateframe
+    num_item = len(df_item_pool)  # นับจำนวนสินค้าทั้งหมด
+    count_batch = 1
+    weight_each_batch = [0]
+    weight_heavy_each_batch = [0]
+    list_batch_by_index_category = [[[], []]] # [[[19,32][14]]]]
+    list_batch_by_self_cap_index_category = [[[], []]]  # [[[(100,19),(80,32)],[70,14]]]
+    list_batch_by_total_weight_above = [[[0], [0]]]   # [[[90, 70], [50]]]
+
+    # พิจารณาที่ละ item, num_item
+    for i in range(num_item):
+        '''Index สินค้าที่ถูกพิจารณาปัจจุบัน '''
+        item_current = list_index_item[i]
+        '''ข้อมูลสินค้าปัจจุบัน
+        EX :    index    location  item     category  weight    self_capacity     duedate     order
+                52       731        314         1       5             19          10.5417     19'''
+        data_item_current = df_item_pool.iloc[[list_index_item[i]]]
+        ''' น้ำหนักสินค้าปัจจุบัน '''
+        weight_item = data_item_current['weight'].values
+        weight_item_current = weight_item[0]
+        # print(f'item_current = {item_current}')
+        # print(f'weight_item_current = {weight_item_current}')
+
+
+        # data_item_current = data_item_current.copy()
+        #data_item_current.loc[item_current, 'batch'] = 1
+        #df_item_record = pd.concat([df_item_record, data_item_current]).astype(int)
+
+        current_batch = 1
+        while True:
+
+            for j in range(0, int(count_batch)):
+                # print(f'weight_each_batch = {weight_each_batch}')
+                # print(f'weight_heavy_each_batch[{j}] = {weight_heavy_each_batch[j]}')
+                # print(f'------------------')
+                # print(f'current_batch = {current_batch}')
+                conditions = 0
+                #  1 ตรวจสอบว่าน้ำหนักเกินความสามารถพนักงานหรือไม่
+                if weight_each_batch[j] + weight_item_current > capacity_picker:
+                    # print(f' ++ ความจุเกิน ++++')
+                    conditions = 1
+                    continue
+                # 2 ตรวจสอบว่าเป็นสินค้าหนักหรือเปล่า ถ้าเป็นสินค้าหนักน้ำหนักรวมต้องไม่เกิน value threshold
+
+                if item_current in heavy_item_set:
+
+                    if weight_heavy_each_batch[j] + weight_item_current > value_threshold:
+                        # print(f' ++ สินค้าหนักเกิน ++++')
+                        conditions = 1
+                        continue
+                # 3 ตรวจสอบความเปราะ
+                # แยกชนิดของสินค้าปัจจุบันก่อน
+
+                if data_item_current['category'].values == 0:
+                    # print(f'non food ')
+                    values_self_capacity = data_item_current['self_capacity'].values
+                    insert_pos = bisect_left_desc(list_batch_by_self_cap_index_category[j][0],
+                                                  (data_item_current['self_capacity'].values, item_current))
+                    list_batch_by_self_cap_index_category[j][0].insert(insert_pos,
+                                                (values_self_capacity[0], item_current))
+                    new_list_total_weight_above = [list_batch_by_total_weight_above[j][b][:] for b in range(len(list_batch_by_total_weight_above[j]))]
+                    if (insert_pos < (len(list_batch_by_total_weight_above[j][0])-1)):
+                        weight_above_new_item = new_list_total_weight_above[0][insert_pos] + df_item_pool.iloc[list_batch_by_self_cap_index_category[j][0][insert_pos][1]]['weight']
+                    else:
+                        weight_above_new_item = new_list_total_weight_above[1][0]+ df_item_pool.iloc[list_batch_by_self_cap_index_category[j][0][insert_pos][1]]['weight']
+
+                    new_list_total_weight_above[0].insert(insert_pos,weight_above_new_item)
+                    for pos in range(insert_pos):
+                        new_list_total_weight_above[0][pos] += weight_item_current
+                    # print(f'list_batch_by_self_cap_index_category = {list_batch_by_self_cap_index_category}')
+                    for pos in range(insert_pos):
+                        if (new_list_total_weight_above[0][pos]) > \
+                                list_batch_by_self_cap_index_category[j][0][pos][0]:
+                            del list_batch_by_self_cap_index_category[j][0][insert_pos]
+                            # print(f' ++ ความเปราะ non food ++++')
+                            conditions = 1
+                            break
+
+                else:  # สินค้าเป็น food
+
+                    # print(f'food ')
+                    values_self_capacity = data_item_current['self_capacity'].values
+
+                    insert_pos = bisect_left_desc(list_batch_by_self_cap_index_category[j][1],
+                                                  (data_item_current['self_capacity'].values, item_current))
+                    list_batch_by_self_cap_index_category[j][1].insert(insert_pos, (values_self_capacity[0], item_current))
+                    # ตรวจสอบกับกลุ่ม non-food ที่อยู่ด้านล่างก่อน
+                    # print(f'list_batch_by_self_cap_index_category = {list_batch_by_self_cap_index_category}')
+
+                    # print(f'list_batch_by_total_weight_above = {list_batch_by_total_weight_above}')
+                    new_list_total_weight_above = [list_batch_by_total_weight_above[j][b][:] for b in
+                                                   range(len(list_batch_by_total_weight_above[j]))]
+                    # print(new_list_total_weight_above)
+                    if (insert_pos < (len(list_batch_by_total_weight_above[j][1]) - 1)):
+                        weight_above_new_item = new_list_total_weight_above[1][insert_pos] + \
+                                                df_item_pool.iloc[list_batch_by_index_category[j][1][insert_pos]][
+                                                    'weight']
+                    else:
+                        weight_above_new_item = 0
+
+                    new_list_total_weight_above[1].insert(insert_pos, weight_above_new_item)
+                    for pos in range(len(list_batch_by_self_cap_index_category[j][0])):
+                        new_list_total_weight_above[0][pos] += weight_item_current
+
+                    for pos in range(insert_pos):
+                        new_list_total_weight_above[1][pos] += weight_item_current
+                    # print(f' สมาชิกใน non food = {len(list_batch_by_self_cap_index_category[j][0])}')
+                    # print(f'new_list_total_weight_above[0][pos] = {new_list_total_weight_above[0]}')
+                    for pos in range(len(list_batch_by_self_cap_index_category[j][0])):
+                        if (new_list_total_weight_above[0][pos]) > \
+                                list_batch_by_self_cap_index_category[j][0][pos][0]:
+                            del list_batch_by_self_cap_index_category[j][1][insert_pos]
+                            #print(f' ++ ความเปราะ non food ใน food ++++')
+                            conditions = 1
+                            break
+                    if conditions:
+                        continue
+                    for pos in range(insert_pos):
+                        if (new_list_total_weight_above[1][pos]) > \
+                                list_batch_by_self_cap_index_category[j][1][pos][0]:
+                            del list_batch_by_self_cap_index_category[j][1][insert_pos]
+                            #print(f' ++ ความเปราะ food ใน food ++++')
+                            conditions = 1
+                            break
+                    if conditions:
+                        continue
+
+                if not conditions:  # ถ้า conditons เป็น 0
+                    weight_each_batch[j] += weight_item_current
+                    if item_current in heavy_item_set:
+                        weight_heavy_each_batch[j] += weight_item_current
+
+                    if data_item_current['category'].values == 0:  # non_food
+                        list_batch_by_index_category[j][0].insert(insert_pos, item_current)
+                        # for pos in range(insert_pos):
+                        #     list_batch_by_total_weight_above[j][0][pos] += weight_item_current
+                    else:  # food
+                        list_batch_by_index_category[j][1].insert(insert_pos, item_current)
+                        # for pos in range(len(list_batch_by_index_category[j][0])):
+                        #     list_batch_by_total_weight_above[j][0][pos] += weight_item_current
+                        # for pos in range(insert_pos):
+                        #     list_batch_by_total_weight_above[j][1][pos] += weight_item_current
+                    list_batch_by_total_weight_above[j] = new_list_total_weight_above
+                    break
+
+            if conditions:
+
+                count_batch += 1
+                if data_item_current['category'].values == 0:
+
+                    values_self_capacity = data_item_current['self_capacity'].values
+                    list_batch_by_index_category.append([[item_current],[]])
+                    list_batch_by_self_cap_index_category.append([[(values_self_capacity[0],item_current)],[]])
+                    list_batch_by_total_weight_above.append([[0],[0]])
+                else:
+                    values_self_capacity = data_item_current['self_capacity'].values
+                    list_batch_by_index_category.append([[], [item_current]])
+                    list_batch_by_self_cap_index_category.append(
+                        [[], [(values_self_capacity[0], item_current)]])
+                    list_batch_by_total_weight_above.append([[], [0]])
+
+                weight_each_batch.append(weight_item_current)
+                if item_current in heavy_item_set:
+                    weight_heavy_each_batch.append(weight_item_current)
+                else:
+                    weight_heavy_each_batch.append(0)
+                break
+
+            if not conditions:
+                break
+
+
+           # ยังไม่เสร็จ App ไปทำต่อให้ return ค่าได้เหมือน batching_open ตัวเดิม 31/1/2024 16:18
+    # print(f'list_batch_by_self_cap_index_category = {list_batch_by_self_cap_index_category}')
+    # print(f'batch = {len(list_batch_by_index_category)}')
+    # print(f'list_batch_by_index_category = {list_batch_by_index_category}')
+
+    '''แปลง ผลลัพท์ที่ได้ ให้สัมพันธ์กับ function อื่น '''
+    ''' Output Function : return  list_batching_item, df_item_record, list_item_in_batch
+            1) list_batching_location = [[242, 776, 870, 534, 526, 109, 806, 895], [871, 122]]
+            2) df_item_record
+            3) list_item_in_batch = [[8, 3, 9, 1, 6, 7, 4, 5], [2, 0]]'''
+
+    '''3) Convert output (list_batch_by_index_category) to list_item_in_batch = [[8, 3, 9, 1, 6, 7, 4, 5], [2, 0]] '''
+    list_item_in_batch = []
+    for run_batch in range(len(list_batch_by_index_category)):
+        new_list = join_lists_concatenation(list_batch_by_index_category[run_batch])
+        list_item_in_batch.append(new_list)
+
+
+    '''2) Convert list_item_in_batch to Dataframe : (df_item_record)'''
+    # list_batching_location = [[] for _ in range(len(list_item_in_batch))]
+    # df_item_record = pd.DataFrame()
+    # for run_batch in range(len(list_item_in_batch)):
+    #     for run_index in range(len(list_item_in_batch[run_batch])):
+    #         df_item_record = pd.concat([df_item_record, df_item_pool.iloc[[list_item_in_batch[run_batch][run_index]]]])
+    #         '''Add  หมายเลข  batch ของ item ลง dataframe ใน column 'batch'
+    #                 location  item  category  weight  self_capacity   duedate  order  batch
+    #         14       825   788         0      47            150  208.3960      5        1
+    #         1        334   797         0      43            150   27.3958      0        1
+    #         19       358   542         0       9             47   12.3958      7        1   '''
+    #         df_item_record.loc[list_item_in_batch[run_batch][run_index], 'batch'] = run_batch+1
+    #         df_item_record = df_item_record.astype({'batch': int})
+    #         '''3) Convert df_item_record to list_batching_location = [[242, 776, 870, 534, 526, 109, 806, 895], [871, 122] '''
+    #         list_batching_location[run_batch].append(df_item_pool.loc[list_item_in_batch[run_batch][run_index], 'location'])
+
+    #From Aj Pop
+    list_batching_location = [[] for _ in range(len(list_item_in_batch))]
+    list_to_create_df_item_record = []
+    list_of_indices = []
+    for run_batch in range(len(list_item_in_batch)):
+        for run_index in range(len(list_item_in_batch[run_batch])):
+            list_batching_location[run_batch].append(df_item_pool.loc[list_item_in_batch[run_batch][run_index], 'location'])
+            new_index = df_item_pool.iloc[list_item_in_batch[run_batch][run_index]].name
+            new_row = df_item_pool.iloc[list_item_in_batch[run_batch][run_index]].tolist() + [int(run_batch+1)]
+            #new_row = list_item_in_batch[run_batch][run_index].tolist() + [int(run_batch+1)]
+            list_to_create_df_item_record.append(new_row)
+            list_of_indices.append(new_index)
+
+    columns = ['location', 'item', 'category', 'weight', 'self_capacity', 'duedate', 'order', 'batch']
+    df_item_record = pd.DataFrame(list_to_create_df_item_record, columns=columns, index=list_of_indices)
+    df_item_record = df_item_record.astype({'location': int, 'item' : int, 'category' : int, 'order' : int})
+
+    return list_batching_location, df_item_record, list_item_in_batch
+
+
+def end():
     return
