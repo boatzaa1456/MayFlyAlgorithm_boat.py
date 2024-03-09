@@ -2,7 +2,7 @@ import random
 
 import pandas
 import pandas as pdfo
-from evaluate_all_sols import*
+from evaluate_all_sols_old import*
 
 random.seed(1234)
 # df_item_sas_random =pd.read_csv('df_item_sas_random.csv')
@@ -194,7 +194,6 @@ def init_velocity_sol(arc_sol_cut):
 def coef_times_velocity(coef,arc_sol_velocity_dict):
     num_item = len(arc_sol_velocity_dict)
     coef_times_velocity_dict = [{} for item in range(num_item)]
-    #[{},{},{},.....]
     for item in range(num_item):
         for arc in arc_sol_velocity_dict[item].keys():
             if coef*arc_sol_velocity_dict[item][arc]>1:

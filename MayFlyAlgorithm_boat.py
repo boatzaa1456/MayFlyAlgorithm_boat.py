@@ -1,6 +1,6 @@
 import pandas as pd
 import random
-from evaluate_all_sols  import *
+from evaluate_all_sols_old  import *
 random.seed(1234)
 
 def read_input(name_path_input):

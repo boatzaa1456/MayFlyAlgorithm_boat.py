@@ -1,126 +1,101 @@
 import random
+import time
 import numpy as np
 import matplotlib.pyplot as plt
-from evaluate_all_sols import *
+from evaluate_all_sols_old import *
 import itertools
 import pandas as pd
-import random
+import math
 random.seed(3124)
+np.random.seed(3124)
 def read_input(name_path_input):
+    # อ่านไฟล์ CSV เพียงครั้งเดียว
     df_item_sas_random = pd.read_csv('df_item_sas_random.csv')
-    # print(df_item_sas_random)
 
-    name_path_input = '1R-20I-150C-2P'
+    # อ่านไฟล์อื่นๆ
+    duedate_path = f'{name_path_input}\\duedate_{name_path_input}.csv'
+    input_location_path = f'{name_path_input}\\input_location_item_{name_path_input}.csv'
+    df_duedate = pd.read_csv(duedate_path, header=None)
+    df_item_oder = pd.read_csv(input_location_path, header=None)
 
-    df_duedate = pd.read_csv(name_path_input + '\\duedate_' + name_path_input + '.csv', header=None)
-    # print(df_duedate)
-
-    df_item_oder = pd.read_csv(name_path_input + '\\input_location_item_' + name_path_input + '.csv', header=None)
-    # print(df_item_oder)
-
-    list_duedate = df_duedate[0].values
+    # แปลงเป็น list
     list_duedate = df_duedate[0].tolist()
-    # print(list_duedate)
-    # print(type(list_duedate))
-
     num_order = df_item_oder.shape[1]
-    # print(num_order)
 
-    list_order = []  # ทำหน้าที่ในการเก็บเลข order ของแต่ละ Item
-    list_total_item = []  # ทำหน้าที่ในการเก็บเลข item ตามลำดับ order
+    # ประมวลผลแต่ละ order และสร้าง DataFrame
+    order_items = [df_item_oder[order][df_item_oder[order] != 0] for order in range(num_order)]
+    df_item_pools = [
+        df_item_sas_random[df_item_sas_random['location'].isin(order_item)].assign(duedate=list_duedate[order],order=order) for order, order_item in
+        enumerate(order_items)]
 
-    df_item_pool = pd.DataFrame()
+    # รวม DataFrame
+    df_item_pool = pd.concat(df_item_pools, ignore_index=True)
 
-    for order in range(num_order):
-        item = df_item_oder[order][df_item_oder[order] != 0]
-        # print(item)
-        # print(df_item_sas_random['location'].isin(item))
-        df_item_in_this_order = df_item_sas_random[df_item_sas_random['location'].isin(item)].copy()
-        df_item_in_this_order['duedate'] = list_duedate[order]
-        # print(df_item_in_this_order)
-        df_item_pool = pd.concat([df_item_pool, df_item_in_this_order])
-        # print(df_item_pool)
+    # สร้าง list_order และ list_total_item (ถ้าจำเป็น)
+    list_order = [order for order in range(num_order) for _ in range(len(order_items[order]))]
+    list_total_item = [item for order_item in order_items for item in order_item.tolist()]
 
-        num_item_this_order = df_item_in_this_order.shape[0]
-        for i in range(num_item_this_order):
-            list_order.append(order)
-        # print(list_order)
-        list_total_item.extend(item.tolist())
-        # print(list_total_item)
-    # print(df_item_pool)
-    df_item_pool['order'] = list_order
-    # print(df_item_pool)
-    df_item_pool.reset_index(drop=True, inplace=True)
-    # print(df_item_pool)
     return df_item_pool, df_item_sas_random
-# num_item = df_item_pool.shape[0]
-num_sol = 5 #จำนวนคำตอบในแต่ละรอบ
-cur_sol = []
 
+def init_population_and_eval(pop_size, num_item):
+    population = [[i for i in range(num_item)] for _ in range(pop_size)]
+    evaluations = []
+    for individual in population:
+        random.shuffle(individual)
+        evaluations.append(evaluate_all_sols(individual, df_item_pool, name_path_input))
+    return population, evaluations
 
-#แปลงจาก list ให้กลายเป็น arc ต้องรู้ว่ามีทั้งหมดกี่ตัว
+def process_evaluations(evaluations, pop_size):
+    cur_sols, cur_sols_value, cur_arc_sols, arc_sols_cut, velocity_dict = [], [], [], [], []
+    for evaluation in evaluations:
+        cur_sols.append(sum(evaluation[2], []))
+        cur_sols_value.append(evaluation[1])
+    for index in range(pop_size):
+        cur_arc_sols.append(sol_from_list_to_arc(cur_sols[index]))
+        arc_sols_cut.append(cut_arc_sol(cur_arc_sols[index]))
+        velocity_dict.append(init_velocity_sol(arc_sols_cut[index]))
+    return cur_sols, cur_sols_value, cur_arc_sols, arc_sols_cut, velocity_dict
+
 def sol_from_list_to_arc(sol):
-    num_item = len(sol)
-    arc_sol = []
-    for i in range(num_item-1):
-        arc_sol.append((sol[i],sol[i+1]))
-    return arc_sol
+    return [(sol[i], sol[i+1]) for i in range(len(sol) - 1)]
 
-# arc_sol = sol_from_list_to_arc(cur_sol[0])
-# print(arc_sol)
 
 def all_sol_from_list_to_arc(all_sols):
-    num_sol = len(all_sols) #เก็บจำนวนคำตอบของ all_sols
+    num_sol = len(all_sols)
     num_item = len(all_sols[0])
-
-    #สร้าง list ซ้อน list โดยใช้ list comprehension
-    #all_arc_sols = [[] for _ in range(num_sol)]
-
-    #อีกทางเลือกหนึ่ง ถ้าไม่อยากใช้ list comprehension คือ วน for loop
-    #all_arc_sols = []
-    #for _ in range(num_sol):
-    #    all_arc_sols.append()
     all_arc_sols = [[(all_sols[i][j], all_sols[i][j+1]) for j in range(num_item-1)] for i in range(num_sol)]
-    #for i in range(num_sol):
-       #for j in range(num_item-1):
-          #all_arc_sols[i].append((all_sols[i][j],all_sols[i][j+1]))
-
     return all_arc_sols
 
-# all_arc_sols = all_sol_from_list_to_arc(cur_sol)
-# print(all_arc_sols)
+def cut_arc_sol(arc_sol):
+    num_item = len(arc_sol) + 1
+    arc_sol_list = [[] for _ in range(num_item)]
 
-def cut_arc_sol(arc_sol): #argument เป็น arc_sol ของคำตอบเดียว
-    num_item = len(arc_sol)+1
-    arc_sol_cut = [[] for _ in range(num_item)]
-    for item in range(num_item):
-        for arc in arc_sol:
-            if item == arc[0] or item == arc[1]:
-                arc_sol_cut[item].append(arc)
+    for arc in arc_sol:
+        arc_sol_list[arc[0]].append(arc)
+        arc_sol_list[arc[1]].append(arc)
+
+    arc_sol_cut = [arc_sol_list[item] for item in range(num_item)]
+
     return arc_sol_cut
 
-# arc_sol_cut = cut_arc_sol(all_arc_sols[0])
-# print(arc_sol_cut)
-
-def init_velocity_sol(arc_sol_cut) :
-    import random
-    num_item = len(arc_sol_cut) #นับจำนวน item จากจำนวนสมาชิกของ list arc_sol_cut
+def init_velocity_sol(arc_sol_cut, vmax, vmin):
+    num_item = len(arc_sol_cut)
     arc_sol_velocity_dict = [{} for _ in range(num_item)]
     for item in range(num_item):
         for arc in arc_sol_cut[item]:
-            arc_sol_velocity_dict[item][arc] = round(random.random(), 4)
+            # Random factor for the velocity
+            rand = random.random()
+            # Calculate the velocity based on the formula given
+            velocity = rand * (vmax - vmin) + vmin
+            # Ensure the velocity is within the specified limits
+            velocity = min(vmax, max(vmin, velocity))
+            arc_sol_velocity_dict[item][arc] = round(velocity, 4)
 
     return arc_sol_velocity_dict
 
-# arc_sol_velocity_dict = init_velocity_sol(arc_sol_cut)
-# print(arc_sol_velocity_dict)
-
-# Vt+1 = w*Vt + c1r1(pbest-xi) + c2r2(gbest-xi)
-# xt+1 = xt+vt+1 Solution Update --> cut_set
 def coef_times_velocity(coef,arc_sol_velocity_dict):
     num_item = len(arc_sol_velocity_dict)
     coef_times_velocity_dict = [{} for item in range(num_item)]
-    #[{}, {}, {}, ...]
     for item in range(num_item):
         for arc in arc_sol_velocity_dict[item].keys():
             if coef*arc_sol_velocity_dict[item][arc] >1:
@@ -128,13 +103,7 @@ def coef_times_velocity(coef,arc_sol_velocity_dict):
             else:
                 coef_times_velocity_dict[item][arc] = round(coef*arc_sol_velocity_dict[item][arc],4)
     return coef_times_velocity_dict
-# coef_times_velocity_dict = coef_times_velocity(0.7,arc_sol_velocity_dict)
-# print(coef_times_velocity_dict)
 
-# # arc_first เช่น [[(0,1),(2,0)], [(0,1),(1,22)], ...]
-# arc_first = [[(0,2)], [(2,1)], [(0,2),(2,1)]] #0 2 1
-# arc_second = [[(0,1)], [(0,1),(1,2)], [(1,2)]] #0 1 2
-# #arc_first - arc_second = [[(0,2)], [(2,1)], [(0,2),(2,1)]]
 def position_minus_position(arc_first, arc_second):
     num_item = len(arc_first)
     pos_minus_pos = [[] for item in range(num_item)]
@@ -143,11 +112,7 @@ def position_minus_position(arc_first, arc_second):
             if arc not in arc_second[item]:
                 pos_minus_pos[item].append(arc)
     return pos_minus_pos
-# pos_minus_pos = position_minus_position(arc_first, arc_second)
-# print(pos_minus_pos)
 
-#arc_first - arc_second = arc_diff = [[(0,2)], [(2,1)], [(0,2),(2,1)]]
-#coef_times_position_dict = [{(0,2):1}, {(2,1):0.4}, {(0,2):0.5, (2,1):0.7}]
 def coef_times_position(c_value, arc_diff):
     import random
     num_item = len(arc_diff)
@@ -159,92 +124,85 @@ def coef_times_position(c_value, arc_diff):
                 coef = 1
             coef_times_position_dict[item][arc] = round(coef,3)
     return coef_times_position_dict
-# coef_times_position_dict = coef_times_position(2,pos_minus_pos)
-# print(coef_times_position_dict)
 
-v_first = [{(0,1):0.5, (2,0):0.3}, {(0,1):0.6}, {(2,0):0.4}] #2 0 1
-v_second = [{(2,0):0.2}, {(1,2):0.9}, {(2,0):0.5, (1,2):0.8}] #1 2 0
-#added_v = [{(0,1):0.5, (2,0):0.3}, {(0,1):0.6, (1,2):0.9}, {(2,0):0.5, (1,2):0.8}]
 def add_velocity(velocity_first, velocity_second):
-    num_item = len(velocity_first)
-    added_velocity_dict = [{} for item in range(num_item)]
-    for item in range(num_item):
-        for arc in velocity_first[item]:
-            added_velocity_dict[item][arc] = velocity_first[item][arc]
-        for arc in velocity_second[item]:
-            if arc in added_velocity_dict[item].keys():
-                if velocity_second[item][arc] > added_velocity_dict[item][arc]:
-                    added_velocity_dict[item][arc] = velocity_second[item][arc]
-            else:
-                added_velocity_dict[item][arc] = velocity_second[item][arc]
+    added_velocity_dict = []
+    for vf, vs in zip(velocity_first, velocity_second):
+        combined_dict = {arc: max(vf.get(arc, 0), vs.get(arc, 0)) for arc in set(vf) | set(vs)}
+        added_velocity_dict.append(combined_dict)
     return added_velocity_dict
 
-# added_v = add_velocity(v_first, v_second)
-# print(f'added_velocity is {added_v}')
 
 def check_velocity_inconsistency(added_velocity_dict):
-    num_item = len(added_velocity_dict)
-    import copy
-    #new_added_velocity_dict = copy.deepcopy(added_velocity_dict)
-    new_added_velocity_dict = [{arc:prob for arc,prob in added_velocity_dict[item].items()}for item in range(num_item)]
-    for item in range(num_item):
-        for arc_first in added_velocity_dict[item].keys():
-            if arc_first in added_velocity_dict[arc_first[0]].keys():
-                if added_velocity_dict[item][arc_first]< added_velocity_dict[arc_first[0]][arc_first]:
-                    new_added_velocity_dict[item][arc_first] = added_velocity_dict[arc_first[0]][arc_first]
-                # else:
-                #     new_added_velocity_dict[arc_first[0]][arc_first] = added_velocity_dict[item][arc_first]
-            if arc_first in added_velocity_dict[arc_first[1]].keys():
-                if added_velocity_dict[item][arc_first]< added_velocity_dict[arc_first[1]][arc_first]:
-                    new_added_velocity_dict[item][arc_first] = added_velocity_dict[arc_first[1]][arc_first]
-    #             else:
-    #                 new_added_velocity_dict[arc_first[1]][arc_first] = added_velocity_dict[item][arc_first]
-    return new_added_velocity_dict
+    # Directly iterate over items and their arcs without creating a deep copy.
+    for item, arcs in enumerate(added_velocity_dict):
+        for arc, velocity in arcs.items():
+            # Check and update based on velocity in the arc's originating and ending items
+            origin_velocity = added_velocity_dict[arc[0]].get(arc, 0)
+            end_velocity = added_velocity_dict[arc[1]].get(arc, 0)
+            max_velocity = max(velocity, origin_velocity, end_velocity)
 
-def creat_cut_set(added_velocity_dict,alpha):
-    num_item = len(added_velocity_dict)
-    cut_set = [[] for _ in range(num_item)]
-    for item in range(num_item):
-        for arc in added_velocity_dict[item].keys():
-            if added_velocity_dict[item][arc] >= alpha:
-                cut_set[item].append(arc)
+            # Update the current arc's velocity to the maximum found
+            added_velocity_dict[item][arc] = max_velocity
+
+    return added_velocity_dict
+
+
+def creat_cut_set(added_velocity_dict, alpha):
+    cut_set = [
+        [arc for arc, velocity in item_dict.items() if velocity >= alpha]
+        for item_dict in added_velocity_dict
+    ]
+
     return cut_set
-# cut_set = creat_cut_set(new_added_v,0.6)
-# print(cut_set)
+
 
 def select_dest_from_source(source, picked_list, *sets):
-    # function ทำหน้าที่ในการเลือก item ที่เราจะเดินเก็บถัดไป (dest) จากตำแหน่งปัจจุบันที่เราอยู่ (source) โดยเราต้องการได้ผลลัพธ์เป็น
-    # arc ของ (source,dest) และ picked_list เป็น list ที่เก็บ item ที่เราเดินเก็บไปแล้ว
     import random
-    for set in sets:
-        new_set = []
-        if len(set[source])>0:
-            for arc in set[source]:
-                if arc[1] not in picked_list and arc[0] == source:
-                    new_set.append(arc)
-        if len(new_set)>0:
-            dest = random.choice(new_set)[1]
-            break
-    arc_source_dest = (source,dest)
-    return dest, arc_source_dest
+    # Flatten the sets and filter directly using list comprehension
+    eligible_arcs = [
+        arc for s in sets for arc in s[source]
+        if arc[1] not in picked_list and arc[0] == source
+    ]
+
+    if eligible_arcs:
+        dest = random.choice(eligible_arcs)[1]
+        arc_source_dest = (source, dest)
+        return dest, arc_source_dest
+    else:
+        # Handle the case where no eligible destination is found
+        return None, (source, None)
 
 def sol_position_update(cut_set, previous_x, sub_E_list, start_previous_x, start_pbest, start_gbest):
-    import random
-
     num_item = len(cut_set)
     picked_list = []
     picked_list_arc = []
 
-    source = random.choice([start_previous_x, start_pbest, start_gbest, random.choice(range(num_item))])
+    # Streamlined random source selection
+    all_starts = [start_previous_x, start_pbest, start_gbest] + list(range(num_item))
+    source = random.choice(all_starts)
     picked_list.append(source)
 
-    for item_counter in range(num_item-1):
+    for _ in range(num_item - 1):
         dest, arc_source_dest = select_dest_from_source(source, picked_list, cut_set, previous_x, sub_E_list)
+        if dest is None:  # Handle case where no destination is found
+            break
         source = dest
         picked_list.append(dest)
         picked_list_arc.append(arc_source_dest)
 
     return picked_list, picked_list_arc
+
+import random
+
+def mutShuffleIndexes(individual, indpb):
+    size = len(individual)
+    for i in range(size):
+        if random.random() < indpb:
+            swap_indx = random.randint(0, size - 1)
+            individual[i], individual[swap_indx] = individual[swap_indx], individual[i]
+    return individual
+
 
 def cxPartialyMatched(ind1, ind2):
     """Executes a partially matched crossover (PMX) on the input individuals.
@@ -294,6 +252,7 @@ def cxPartialyMatched(ind1, ind2):
         p2[temp1], p2[temp2] = p2[temp2], p2[temp1]
 
     return ind1, ind2
+
 def compare_and_replace(parents, offspring):
     new_solutions = []
     for parent, child in zip(parents, offspring):
@@ -304,3 +263,83 @@ def compare_and_replace(parents, offspring):
             new_solutions.append(parent)
     return new_solutions
 
+def gravity_calculation(gmax, gmin, gen, num_gen):
+    gravity = gmax - (((gmax - gmin) / (num_gen)) * gen)
+    return gravity
+
+def coef_times_position_mayfly_version(a, B, arc_diff, randomness_scale=0.1):
+    num_item = len(arc_diff)
+    coef_times_position_dict = [{} for _ in range(num_item)]
+
+    for item, arcs in enumerate(arc_diff):
+        r = len(arcs)
+        if r > 0:
+            coef = gaussian_coefficient(a, B, r)
+            # Add randomness to the coefficient
+            random_adjustment = (random.random() - 0.5) * 2 * randomness_scale
+            coef_with_randomness = coef * (1 + random_adjustment)
+            for arc in arcs:
+                coef_times_position_dict[item][arc] = round(coef_with_randomness, 3)
+
+    return coef_times_position_dict
+
+def exponential_decay(initial_value, iteration, delta):
+    return initial_value * (delta ** iteration)
+
+def partial_shuffle(sol, fraction):
+    num_elements_to_shuffle = int(len(sol) * fraction)
+    indices = list(range(len(sol)))
+    random.shuffle(indices)
+    indices_to_shuffle = indices[:num_elements_to_shuffle]
+
+    # Directly swap elements without creating a separate list of selected elements
+    for i in range(num_elements_to_shuffle):
+        swap_with_idx = random.choice(indices_to_shuffle)
+        # Swap elements
+        sol[indices_to_shuffle[i]], sol[swap_with_idx] = sol[swap_with_idx], sol[indices_to_shuffle[i]]
+
+def calculate_tardiness_behavior(tardiness_scores):
+    # Calculate best tardiness
+    best_tardiness = min(tardiness_scores)
+
+    return best_tardiness
+
+# Function to calculate Gaussian coefficient
+def gaussian_coefficient(a, B, r):
+    return a * (1 - math.exp(-B * r ** 2))
+
+
+def coef_times_position_with_gaussian(arc_first, arc_second, a, beta):
+    # Convert arc_second to a list of sets for fast lookups
+    arc_second_sets = [set(arcs) for arcs in arc_second]
+
+    # Pre-calculate random factors if they are independent of arc values
+    random_factors = [random.random() for _ in range(len(arc_first))]
+
+    coef_times_position_dict = []
+
+    for item, arcs in enumerate(arc_first):
+        arcs_difference = set(arcs) - arc_second_sets[item]
+        rp = len(arcs_difference)
+        c_value = a * math.exp(-beta * rp ** 2)
+
+        # Construct the dict for this item using dict comprehension
+        velocities = {arc: min(1, round(c_value * random_factors[item], 4)) for arc in arcs_difference}
+        coef_times_position_dict.append(velocities)
+
+    return coef_times_position_dict
+
+
+def dynamic_inertia_weight(g_max, g_min, iter, iter_max):
+    return g_max - ((g_max - g_min) / iter_max) * iter
+
+def coef_times_velocity_mayfly(g_max, g_min, iter, iter_max, arc_sol_velocity_dict):
+
+    num_item = len(arc_sol_velocity_dict)
+    coef_times_velocity_dict = [{} for item in range(num_item)]
+    g = dynamic_inertia_weight(g_max, g_min, iter, iter_max)
+    for item in range(num_item):
+        for arc, velocity in arc_sol_velocity_dict[item].items():
+            updated_velocity = g * velocity
+            coef_times_velocity_dict[item][arc] = 1 if updated_velocity > 1 else round(updated_velocity, 4)
+    return coef_times_velocity_dict

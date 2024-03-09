@@ -2,13 +2,15 @@ import random
 import time
 import numpy as np
 import matplotlib.pyplot as plt
-from evaluate_all_sols import *
+from evaluate_all_sols_old import *
 import itertools
 import pandas as pd
 from Mayfly_all_function import *
+from numba import jit, cuda
 random.seed(3124)
+@jit(target_backend='cuda')
 def mayfly(name_path_input, num_gen, pop_size, *parameters):
-    import copy
+    # import copy
     # input data
     a1, a2, beta, gravity = parameters
     df_item_pool, df_item_sas_random = read_input(name_path_input)
@@ -52,7 +54,7 @@ def mayfly(name_path_input, num_gen, pop_size, *parameters):
         male_velocity_dict.append(init_velocity_sol(male_arc_sols_cut[male]))
 
     # # ---------------------- ส่วนของ Mayfly ตัวเมีย ---------------------- #
-    # Initailze male pbest
+    # Initailze female pbest
     female_pbest_value = [100000 for _ in range(half_pop_size)]
     female_pbest_sol = [[] for sol in range(half_pop_size)]
     female_pbest_arc_sols_cut = [[] for sol in range(half_pop_size)]
@@ -195,29 +197,31 @@ def mayfly(name_path_input, num_gen, pop_size, *parameters):
                 female_cur_sols_value[sol] = female_replace_new_values[sol]
                 female_cur_sols[sol] = female_replace_new_cur_sols[sol]
 
-        progress_percent = (gen + 1) / num_gen * 100
-        print(f'Progress: {progress_percent:.2f}%')
-    print(f'total tardiness : {gbest_value}')
-    print(f'gbest solution : {gbest_sol}')
-    print(f'male last generation : {male_pbest_value}')
-    print(f'female last generation : {female_pbest_value} ')
-
-    x_axis = list(range(len(gbest_per_gen)))
-    plt.plot(x_axis, gbest_per_gen)
-    plt.xlabel('Generation')
-    plt.ylabel('Fitness')
-    plt.show()
-
-
-start_time = time.time()
-
+#         progress_percent = (gen + 1) / num_gen * 100
+#         print(f'Progress: {progress_percent:.2f}%')
+#     print(f'total tardiness : {gbest_value}')
+#     print(f'gbest solution : {gbest_sol}')
+#     print(f'male last generation : {male_pbest_value}')
+#     # print(f'male last cur sols {male_pbest_sol} :')
+#     print(f'female last generation : {female_pbest_value} ')
+#     # print(f'female last cur sols :{female_pbest_sol}')
+#
+#     x_axis = list(range(len(gbest_per_gen)))
+#     plt.plot(x_axis, gbest_per_gen)
+#     plt.xlabel('Generation')
+#     plt.ylabel('Fitness')
+#     plt.show()
+#
+#
+# start_time = time.time()
+#
 name_path_input = '1R-20I-150C-2P'
 df_item_pool = read_input(name_path_input)
-mayfly(name_path_input, 1000, 10, 1, 1.5, 0.2, 0.1)
-
-end_time = time.time()
-execution_time = end_time - start_time
-print(f"Execution time: {execution_time} seconds")
+mayfly(name_path_input, 50, 50, 0.5, 100, 0.2, 0.1)
+#
+# end_time = time.time()
+# execution_time = end_time - start_time
+# print(f"Execution time: {execution_time} seconds")
 
 
 

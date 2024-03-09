@@ -1,20 +1,17 @@
+from routing import*
+from batching_item_old import*
+from squencing_assignment_algorithms_old import*
+from calculate_process_time import*
 import csv
-import pandas as pd
-
-from calculate_process_time import calculate_completion_time
-from batching_item import batching_open
-from sequencing_assignment_algorithms import ESDR_algorithms
-from routing import precedence_constrained_routing
 
 
-def evaluate_all_sols(new_pop_sol, df_item_poor_batch, heavy_item_set, name_path_input):
-
+#
+def evaluate_all_sols(new_pop_sol, df_item_poor_batch, name_path_input):
 
 
     ''' Read File setting parameter : '''
-    path_folder = name_path_input + '\\setting_parameter_' + name_path_input + '.csv'
+    path_folder = 'setting_parameter.csv'
     df_setting_parameter = pd.read_csv(path_folder)
-
 
     # Open file
     with open(path_folder) as file_obj:
@@ -78,8 +75,8 @@ def evaluate_all_sols(new_pop_sol, df_item_poor_batch, heavy_item_set, name_path
 
     elif method_batch == 2:
 
-        list_batching_item_PSO, df_item_poor_new_PSO, list_index_item_in_batch = batching_open(df_item_poor_batch, list_index,
-                                                                                                  capacity_picker_1, value_threshold_1, heavy_item_set, name_path_input)
+        list_batching_item_PSO, df_item_poor_new_PSO, list_index_item_in_batch = batching_2(df_item_poor_batch, list_index,
+                                                                                                  capacity_picker_1, value_threshold_1, name_path_input)
 
     # ''' read index population '''
     ''' list_item_batch_PSO :       [[41, 160, 840, 477, 152, 206, 319, 620, 624, 895, 731, 512, 726, 104, 57, 122, 
@@ -122,6 +119,7 @@ def evaluate_all_sols(new_pop_sol, df_item_poor_batch, heavy_item_set, name_path
         # print(f'total_distance of batch No. {sol} = {distance_each_batch}')
         list_distance_batch.append(distance_each_batch)
         total_distance = sum(list_distance_batch)
+
     '''record distance each solution '''
     record_list_distance.append(list_distance_batch)
 
